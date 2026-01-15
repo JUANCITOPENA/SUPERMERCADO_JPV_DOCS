@@ -1,9 +1,91 @@
-﻿# 🛒 SUPERMERCADO_JPV_V6
+﻿# 🛒 SUPERMERCADO_JPV_V6 - Sistema de Gestion Integral
 
-## 1. 🚩 Introduccion
-Este documento integra la documentacion descriptiva y el codigo fuente SQL.
+![Version](https://img.shields.io/badge/version-6.0.0-blue.svg)
+![Database](https://img.shields.io/badge/database-SQL_Server-red.svg)
+![Status](https://img.shields.io/badge/status-Production-green.svg)
 
-## 2. 🧩 Diccionario de Datos & Script
+---
+
+## 1. 🚩 Planteamiento del Problema
+La gestion manual o fragmentada de un supermercado conlleva errores en inventarios, lentitud en la facturacion y falta de visibilidad en las finanzas. **SUPERMERCADO_JPV_V6** nace de la necesidad de unificar todos los procesos de negocio (Ventas, Compras, Inventario, RRHH) en una unica fuente de verdad transaccional, robusta y escalable.
+
+---
+
+## 2. 📖 Introduccion
+Este proyecto constituye el **nucleo de datos** para el ERP del supermercado. Disenado bajo estandares de normalizacion (3NF), soporta operaciones concurrentes de multiples cajas y puntos de administracion. La arquitectura esta orientada a mantener la integridad referencial estricta y proporcionar datos analiticos en tiempo real.
+
+---
+
+## 3. 🎯 Objetivos (SMART)
+*   **S**pecific: Centralizar la data de ventas, stock y clientes.
+*   **M**easurable: Reducir el tiempo de cuadre de caja en un 90%.
+*   **A**ttainable: Utilizando SQL Server Enterprise/Developer edition.
+*   **R**elevant: Critico para la toma de decisiones gerenciales.
+*   **T**ime-bound: Operativo 24/7 con backups automatizados.
+
+---
+
+## 4. 🔭 Alcance
+El sistema abarca los siguientes modulos de datos:
+*   ✅ **Inventario:** Productos, Categorias, Unidades, Movimientos.
+*   ✅ **Ventas:** Facturacion, Detalle, Cajas, Turnos.
+*   ✅ **Compras:** Suplidores, Ordenes de Compra, Cuentas por Pagar.
+*   ✅ **Seguridad:** Usuarios, Roles, Auditoria.
+*   ✅ **Entidades:** Clientes, Empleados.
+
+---
+
+## 5. 🛠 Tecnologias y Stack
+| Componente | Tecnologia | Descripcion |
+| :--- | :--- | :--- |
+| **Motor DB** | Microsoft SQL Server | Version 2019 o superior. |
+| **Lenguaje** | T-SQL | Transact-SQL para logica de negocio. |
+| **Integracion** | .NET / C# | Compatible con Entity Framework / Dapper. |
+| **Reportes** | SSRS / PowerBI | Estructura optimizada para BI. |
+
+---
+
+## 6. ⚙ Instalacion y Despliegue
+
+### Requisitos Previos
+*   Instancia de SQL Server activa.
+*   Acceso con privilegios `db_owner` o `sysadmin`.
+
+### Paso a Paso
+1.  **Clonar Repositorio:** Descargue los scripts DDL.
+2.  **Crear Base de Datos:**
+    ```sql
+    CREATE DATABASE SUPERMERCADO_JPV_V6;
+    ```
+3.  **Ejecutar Scripts:** Corra el script `schema.sql` seguido de `seed_data.sql`.
+4.  **Configurar Cadena de Conexion:**
+    `Server=10.0.0.15;Database=SUPERMERCADO_JPV_V6;User Id=JUANCITO;Password=123456;`
+
+---
+
+## 7. 🚀 Uso y Operacion
+El sistema esta disenado para ser consumido por una API o Aplicacion de Escritorio.
+*   **Transacciones:** Utilizar los Stored Procedures `sp_RegistrarVenta`, `sp_ActualizarStock`.
+*   **Consultas:** Usar las Vistas `vw_ReporteVentas`, `vw_StockBajo` para lectura.
+*   **Mantenimiento:** Reconstruccion de indices semanal (domingos 3 AM).
+
+---
+
+## 8. 💡 Ejemplos de Consultas
+
+**Obtener Top 5 Productos mas vendidos:**
+```sql
+SELECT TOP 5 p.Nombre, SUM(dv.Cantidad) as TotalVendido
+FROM DETALLE_VENTA dv
+JOIN PRODUCTO p ON dv.IdProducto = p.Id
+GROUP BY p.Nombre
+ORDER BY TotalVendido DESC;
+```
+
+---
+
+## 9. 🧠 Modelo de Datos Tecnico (Detallado)
+
 
 ```sql
 /*
@@ -36,10 +118,8 @@ USE SUPERMERCADO_JPV_V6;
 GO
 
 -- 1. TABLAS CATÁLOGOS Y MAESTRAS (MEJORADAS)
-
 ```
-
-### -- 1.1 Regiones y Provincias (Geografía)
+### 📁 1.1 Regiones y Provincias (Geografía)
 
 ```sql
 CREATE TABLE REGION (
@@ -55,20 +135,16 @@ CREATE TABLE PROVINCIAS (
     latitud DECIMAL(9,6) NULL,
     longitud DECIMAL(9,6) NULL
 );
-
 ```
-
-### -- 1.2 Género
+### 📁 1.2 Género
 
 ```sql
 CREATE TABLE Genero (
     ID_Genero INT PRIMARY KEY,
     Genero VARCHAR(50) NOT NULL
 );
-
 ```
-
-### -- 1.3 NUEVO: Tipos de NCF (Comprobantes Fiscales DGII)
+### 📁 1.3 NUEVO: Tipos de NCF (Comprobantes Fiscales DGII)
 
 ```sql
 -- Se mapea lo que pediste: "31" para Crédito Fiscal (B01) y "32" para Consumidor Final (B02)
@@ -79,10 +155,8 @@ CREATE TABLE TIPO_NCF (
     SERIE_NCF VARCHAR(3) NOT NULL,       -- Ej: 'B01', 'B02'
     REQUIERE_RNC BIT DEFAULT 0           -- 1 = Si, 0 = No
 );
-
 ```
-
-### -- 1.4 NUEVO: Condiciones de Pago
+### 📁 1.4 NUEVO: Condiciones de Pago
 
 ```sql
 CREATE TABLE CONDICION_PAGO (
@@ -90,20 +164,16 @@ CREATE TABLE CONDICION_PAGO (
     NOMBRE_CONDICION VARCHAR(50) NOT NULL, -- Contado, Crédito 30 días, etc.
     ES_CREDITO BIT DEFAULT 0               -- Define si genera deuda
 );
-
 ```
-
-### -- 1.5 NUEVO: Método de Pago (El instrumento financiero)
+### 📁 1.5 NUEVO: Método de Pago (El instrumento financiero)
 
 ```sql
 CREATE TABLE METODO_PAGO (
     ID_METODO INT PRIMARY KEY,
     METODO VARCHAR(50) NOT NULL -- Efectivo, Tarjeta, Cheque, Transferencia
 );
-
 ```
-
-### -- 1.6 NUEVO: Método de Entrega (Logística)
+### 📁 1.6 NUEVO: Método de Entrega (Logística)
 
 ```sql
 CREATE TABLE METODO_ENTREGA (
@@ -111,10 +181,8 @@ CREATE TABLE METODO_ENTREGA (
     TIPO_ENTREGA VARCHAR(50) NOT NULL, -- Pickup (Tienda), Delivery Local, Envíos Nacionales
     ES_ONLINE BIT DEFAULT 0
 );
-
 ```
-
-### -- 1.7 CLIENTE (MEJORADO CON RNC Y CRÉDITO)
+### 📁 1.7 CLIENTE (MEJORADO CON RNC Y CRÉDITO)
 
 ```sql
 CREATE TABLE CLIENTE (
@@ -138,10 +206,8 @@ CREATE TABLE CLIENTE (
     fecha_creacion DATETIME DEFAULT GETDATE(),
     fecha_actualizacion DATETIME DEFAULT GETDATE()
 );
-
 ```
-
-### -- 1.8 VENDEDOR (Mantenemos estructura)
+### 📁 1.8 VENDEDOR (Mantenemos estructura)
 
 ```sql
 CREATE TABLE VENDEDOR (
@@ -158,10 +224,8 @@ CREATE TABLE FOTOS_VENDEDOR (
     foto_Vendedor_url VARCHAR(255) NOT NULL,
     ID_vendedor INT NOT NULL FOREIGN KEY REFERENCES VENDEDOR(ID_VENDEDOR)
 );
-
 ```
-
-### -- 1.9 PRODUCTOS
+### 📁 1.9 PRODUCTOS
 
 ```sql
 CREATE TABLE PRODUCTO (
@@ -179,10 +243,8 @@ CREATE TABLE FOTO_PRODUCTOS (
     foto_Productos_url VARCHAR(255) NOT NULL,
     ID_PRODUCTO INT NOT NULL FOREIGN KEY REFERENCES PRODUCTO(ID_PRODUCTO)
 );
-
 ```
-
-### -- 1.10 USUARIOS (Seguridad)
+### 📁 1.10 USUARIOS (Seguridad)
 
 ```sql
 -- ESTRUCTURA TABLA USUARIOS (CON ENCRIPTACIÓN)
@@ -207,10 +269,8 @@ GO
 
 
 -- 2. ESTRUCTURA TRANSACCIONAL (VENTAS CON DGII)
-
 ```
-
-### -- 2.1 Tabla Cabecera (La Factura)
+### 📁 2.1 Tabla Cabecera (La Factura)
 
 ```sql
 CREATE TABLE VENTAS (
@@ -240,10 +300,8 @@ CREATE TABLE VENTAS (
     
     fecha_creacion DATETIME DEFAULT GETDATE()
 );
-
 ```
-
-### -- 2.2 Tabla Detalle
+### 📁 2.2 Tabla Detalle
 ```sql
 CREATE TABLE DETALLE_VENTAS (
     ID_DETALLE INT PRIMARY KEY IDENTITY(1,1),
@@ -1390,3 +1448,10 @@ GO
 SELECT ID_PRODUCTO, PRODUCTO, STOCK FROM PRODUCTO WHERE ID_PRODUCTO = 1;
 GO
 ```
+
+---
+## 10. 🤝 Contribucion
+1. Fork el proyecto.
+2. Crear rama.
+
+*Generado el 2026-01-15*
