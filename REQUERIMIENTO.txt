@@ -1,0 +1,82 @@
+# MINI ERP SUPERMERCADO JPV - VERSIÓN 6 (PYTHON / PyQt6 / SQL SERVER)
+**Estado del Proyecto:** FUNCIONAL / ESTABLE
+**Fecha:** 15 de Enero 2026
+**Tecnología:** Python 3.10+, PyQt6, SQL Server (LocalDB)
+
+---
+
+## 1. DESCRIPCIÓN
+Sistema de gestión de punto de venta (POS) y administración para supermercados en República Dominicana. Incluye facturación con NCF (Serie E), control de inventario, gestión de clientes y reportes.
+
+Esta versión (V6) presenta una **interfaz gráfica moderna** con barra lateral, dashboard interactivo y estilos visuales profesionales (CSS/QDarkTheme), abandonando el diseño antiguo de ventanas sueltas.
+
+## 2. INSTALACIÓN Y EJECUCIÓN
+
+### Requisitos Previos
+- Python 3.10 o superior.
+- SQL Server (LocalDB o Express).
+- Driver ODBC 17 for SQL Server.
+
+### Pasos
+1. **Instalar dependencias:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+   *(Dependencias clave: PyQt6, pyodbc, qdarktheme, reportlab, xlsxwriter, matplotlib, qtawesome)*
+
+2. **Base de Datos:**
+   El sistema se conecta automáticamente a `(localdb)\MSSQLLocalDB`.
+   Si la base de datos `SUPERMERCADO_JPV_V6` no existe, ejecuta el script `setup_db_emergency.py` una sola vez para crearla.
+
+3. **Ejecutar Aplicación:**
+   ```bash
+   python main.py
+   ```
+
+4. **Credenciales de Acceso:**
+   - **Usuario:** `Juancito`
+   - **Contraseña:** `123456`
+
+---
+
+## 3. ARQUITECTURA DEL PROYECTO (MVC)
+
+El código está organizado modularmente:
+
+### 📂 Estructura de Carpetas
+- `main.py`: Punto de entrada.
+- `database.py`: Singleton de conexión a SQL Server (Windows Auth).
+- `assets/`: Estilos (`styles.py`) e iconos.
+- `controllers/`: Lógica de negocio pura.
+  - `auth_controller.py`: Login.
+  - `products_controller.py`: CRUD Productos.
+  - `client_controller.py`: CRUD Clientes.
+  - `sales_controller.py`: Lógica de Facturación.
+  - `report_controller.py`: Generación PDF/Excel.
+- `views/`: Interfaz Gráfica (PyQt6).
+  - `main_window_ui.py`: Contenedor principal (Sidebar + StackedWidget).
+  - `dashboard_ui.py`: Gráficos y KPIs.
+  - `pos_ui.py`: Facturación rápida.
+  - `inventory_ui.py`: Gestión de Productos.
+  - `clients_ui.py`: Gestión de Clientes.
+  - `reports_ui.py`: Centro de descargas.
+
+---
+
+## 4. CARACTERÍSTICAS TÉCNICAS (V6)
+
+- **UI Moderna:** Uso de `QStackedWidget` para navegación fluida sin múltiples ventanas emergentes. Tema oscuro/profesional integrado.
+- **Base de Datos:** SQL Server con autenticación integrada (Trusted Connection).
+- **Reportes:** Generación nativa de PDFs con ReportLab y Excel con XlsxWriter.
+- **Gráficos:** Integración de `matplotlib` dentro de PyQt para visualización de ventas en tiempo real.
+- **Validaciones:** Control de stock antes de venta, validación de RNC (longitud) y tipos de datos.
+
+---
+
+## 5. NOTAS DE DESARROLLO
+
+- Si experimenta error de conexión `Login failed`, asegúrese de que su usuario de Windows tenga acceso a la instancia LocalDB (es el comportamiento por defecto).
+- El archivo `test_integration_v6.py` permite probar toda la lógica de backend (BD y Controladores) sin necesidad de abrir la interfaz gráfica.
+
+---
+**Desarrollado por Asistente Gemini CLI.**

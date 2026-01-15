@@ -1,0 +1,7 @@
+PyQt6
+pyodbc
+pyqtdarktheme
+reportlab
+xlsxwriter
+matplotlib
+qtawesome
