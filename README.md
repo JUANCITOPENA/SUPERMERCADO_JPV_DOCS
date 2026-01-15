@@ -1,100 +1,11 @@
-﻿# 🛒 SUPERMERCADO_JPV_V6 - Sistema de Gestion Integral
+﻿# 🛒 SUPERMERCADO_JPV_V6
 
-![Version](https://img.shields.io/badge/version-6.0.0-blue.svg)
-![Database](https://img.shields.io/badge/database-SQL_Server-red.svg)
-![Status](https://img.shields.io/badge/status-Production-green.svg)
+## 1. 🚩 Introduccion
+Este documento integra la documentacion descriptiva y el codigo fuente SQL.
 
----
+## 2. 🧩 Diccionario de Datos & Script
 
-## 1. 🚩 Planteamiento del Problema
-La gestion manual o fragmentada de un supermercado conlleva errores en inventarios, lentitud en la facturacion y falta de visibilidad en las finanzas. **SUPERMERCADO_JPV_V6** nace de la necesidad de unificar todos los procesos de negocio (Ventas, Compras, Inventario, RRHH) en una unica fuente de verdad transaccional, robusta y escalable.
-
----
-
-## 2. 📖 Introduccion
-Este proyecto constituye el **nucleo de datos** para el ERP del supermercado. Disenado bajo estandares de normalizacion (3NF), soporta operaciones concurrentes de multiples cajas y puntos de administracion. La arquitectura esta orientada a mantener la integridad referencial estricta y proporcionar datos analiticos en tiempo real.
-
----
-
-## 3. 🎯 Objetivos (SMART)
-*   **S**pecific: Centralizar la data de ventas, stock y clientes.
-*   **M**easurable: Reducir el tiempo de cuadre de caja en un 90%.
-*   **A**ttainable: Utilizando SQL Server Enterprise/Developer edition.
-*   **R**elevant: Critico para la toma de decisiones gerenciales.
-*   **T**ime-bound: Operativo 24/7 con backups automatizados.
-
----
-
-## 4. 🔭 Alcance
-El sistema abarca los siguientes modulos de datos:
-*   ✅ **Inventario:** Productos, Categorias, Unidades, Movimientos.
-*   ✅ **Ventas:** Facturacion, Detalle, Cajas, Turnos.
-*   ✅ **Compras:** Suplidores, Ordenes de Compra, Cuentas por Pagar.
-*   ✅ **Seguridad:** Usuarios, Roles, Auditoria.
-*   ✅ **Entidades:** Clientes, Empleados.
-
----
-
-## 5. 🛠 Tecnologias y Stack
-| Componente | Tecnologia | Descripcion |
-| :--- | :--- | :--- |
-| **Motor DB** | Microsoft SQL Server | Version 2019 o superior. |
-| **Lenguaje** | T-SQL | Transact-SQL para logica de negocio. |
-| **Integracion** | .NET / C# | Compatible con Entity Framework / Dapper. |
-| **Reportes** | SSRS / PowerBI | Estructura optimizada para BI. |
-
----
-
-## 6. ⚙ Instalacion y Despliegue
-
-### Requisitos Previos
-*   Instancia de SQL Server activa.
-*   Acceso con privilegios `db_owner` o `sysadmin`.
-
-### Paso a Paso
-1.  **Clonar Repositorio:** Descargue los scripts DDL.
-2.  **Crear Base de Datos:**
-    `sql
-    CREATE DATABASE SUPERMERCADO_JPV_V6;
-    `
-3.  **Ejecutar Scripts:** Corra el script `schema.sql` seguido de `seed_data.sql`.
-4.  **Configurar Cadena de Conexion:**
-    `Server=10.0.0.15;Database=SUPERMERCADO_JPV_V6;User Id=JUANCITO;Password=123456;`
-
----
-
-## 7. 🚀 Uso y Operacion
-El sistema esta disenado para ser consumido por una API o Aplicacion de Escritorio.
-*   **Transacciones:** Utilizar los Stored Procedures `sp_RegistrarVenta`, `sp_ActualizarStock`.
-*   **Consultas:** Usar las Vistas `vw_ReporteVentas`, `vw_StockBajo` para lectura.
-*   **Mantenimiento:** Reconstruccion de indices semanal (domingos 3 AM).
-
----
-
-## 8. 💡 Ejemplos de Consultas
-
-**Obtener Top 5 Productos mas vendidos:**
-`sql
-SELECT TOP 5 p.Nombre, SUM(dv.Cantidad) as TotalVendido
-FROM DETALLE_VENTA dv
-JOIN PRODUCTO p ON dv.IdProducto = p.Id
-GROUP BY p.Nombre
-ORDER BY TotalVendido DESC;
-`
-
----
-
-## 9. 🧠 Descripcion del Modelo (Detallado)
-
-### 📐 Arquitectura
-El modelo relacional sigue una arquitectura de estrella modificada para facilitar tanto la transaccion (OLTP) como el reporte rapido.
----
-
-## 10. 📜 Apendice: Script SQL Completo (Source)
-
-A continuacion se presenta el codigo fuente completo utilizado para generar la estructura actual.
-
-`sql
+```sql
 /*
    =============================================================================
    SCRIPT BASE DE DATOS: SUPERMERCADO_JPV_V6 (EDICION DOMINICANA / DGII)
@@ -124,11 +35,13 @@ GO
 USE SUPERMERCADO_JPV_V6;
 GO
 
--- =============================================
 -- 1. TABLAS CATÁLOGOS Y MAESTRAS (MEJORADAS)
--- =============================================
 
--- 1.1 Regiones y Provincias (Geografía)
+```
+
+### -- 1.1 Regiones y Provincias (Geografía)
+
+```sql
 CREATE TABLE REGION (
     ID_REGION INT PRIMARY KEY,
     REGION VARCHAR(50) NOT NULL,
@@ -143,13 +56,21 @@ CREATE TABLE PROVINCIAS (
     longitud DECIMAL(9,6) NULL
 );
 
--- 1.2 Género
+```
+
+### -- 1.2 Género
+
+```sql
 CREATE TABLE Genero (
     ID_Genero INT PRIMARY KEY,
     Genero VARCHAR(50) NOT NULL
 );
 
--- 1.3 NUEVO: Tipos de NCF (Comprobantes Fiscales DGII)
+```
+
+### -- 1.3 NUEVO: Tipos de NCF (Comprobantes Fiscales DGII)
+
+```sql
 -- Se mapea lo que pediste: "31" para Crédito Fiscal (B01) y "32" para Consumidor Final (B02)
 CREATE TABLE TIPO_NCF (
     ID_TIPO_NCF INT PRIMARY KEY,
@@ -159,27 +80,43 @@ CREATE TABLE TIPO_NCF (
     REQUIERE_RNC BIT DEFAULT 0           -- 1 = Si, 0 = No
 );
 
--- 1.4 NUEVO: Condiciones de Pago
+```
+
+### -- 1.4 NUEVO: Condiciones de Pago
+
+```sql
 CREATE TABLE CONDICION_PAGO (
     ID_CONDICION INT PRIMARY KEY,
     NOMBRE_CONDICION VARCHAR(50) NOT NULL, -- Contado, Crédito 30 días, etc.
     ES_CREDITO BIT DEFAULT 0               -- Define si genera deuda
 );
 
--- 1.5 NUEVO: Método de Pago (El instrumento financiero)
+```
+
+### -- 1.5 NUEVO: Método de Pago (El instrumento financiero)
+
+```sql
 CREATE TABLE METODO_PAGO (
     ID_METODO INT PRIMARY KEY,
     METODO VARCHAR(50) NOT NULL -- Efectivo, Tarjeta, Cheque, Transferencia
 );
 
--- 1.6 NUEVO: Método de Entrega (Logística)
+```
+
+### -- 1.6 NUEVO: Método de Entrega (Logística)
+
+```sql
 CREATE TABLE METODO_ENTREGA (
     ID_ENTREGA INT PRIMARY KEY,
     TIPO_ENTREGA VARCHAR(50) NOT NULL, -- Pickup (Tienda), Delivery Local, Envíos Nacionales
     ES_ONLINE BIT DEFAULT 0
 );
 
--- 1.7 CLIENTE (MEJORADO CON RNC Y CRÉDITO)
+```
+
+### -- 1.7 CLIENTE (MEJORADO CON RNC Y CRÉDITO)
+
+```sql
 CREATE TABLE CLIENTE (
     ID_CLIENTE INT PRIMARY KEY,
     NOMBRE_CLIENTE VARCHAR(100) NOT NULL,
@@ -202,7 +139,11 @@ CREATE TABLE CLIENTE (
     fecha_actualizacion DATETIME DEFAULT GETDATE()
 );
 
--- 1.8 VENDEDOR (Mantenemos estructura)
+```
+
+### -- 1.8 VENDEDOR (Mantenemos estructura)
+
+```sql
 CREATE TABLE VENDEDOR (
     ID_VENDEDOR INT PRIMARY KEY,
     VENDEDOR VARCHAR(100) NOT NULL,
@@ -218,7 +159,11 @@ CREATE TABLE FOTOS_VENDEDOR (
     ID_vendedor INT NOT NULL FOREIGN KEY REFERENCES VENDEDOR(ID_VENDEDOR)
 );
 
--- 1.9 PRODUCTOS
+```
+
+### -- 1.9 PRODUCTOS
+
+```sql
 CREATE TABLE PRODUCTO (
     ID_PRODUCTO INT PRIMARY KEY,
     PRODUCTO VARCHAR(100) NOT NULL,
@@ -235,10 +180,12 @@ CREATE TABLE FOTO_PRODUCTOS (
     ID_PRODUCTO INT NOT NULL FOREIGN KEY REFERENCES PRODUCTO(ID_PRODUCTO)
 );
 
--- 1.10 USUARIOS (Seguridad)
--- =============================================
+```
+
+### -- 1.10 USUARIOS (Seguridad)
+
+```sql
 -- ESTRUCTURA TABLA USUARIOS (CON ENCRIPTACIÓN)
--- =============================================
 
 IF OBJECT_ID('USUARIOS', 'U') IS NOT NULL
 BEGIN
@@ -259,11 +206,13 @@ GO
 
 
 
--- =============================================
 -- 2. ESTRUCTURA TRANSACCIONAL (VENTAS CON DGII)
--- =============================================
 
--- 2.1 Tabla Cabecera (La Factura)
+```
+
+### -- 2.1 Tabla Cabecera (La Factura)
+
+```sql
 CREATE TABLE VENTAS (
     ID_VENTA INT PRIMARY KEY IDENTITY(1,1),
     FECHA DATETIME NOT NULL,
@@ -292,7 +241,10 @@ CREATE TABLE VENTAS (
     fecha_creacion DATETIME DEFAULT GETDATE()
 );
 
--- 2.2 Tabla Detalle
+```
+
+### -- 2.2 Tabla Detalle
+```sql
 CREATE TABLE DETALLE_VENTAS (
     ID_DETALLE INT PRIMARY KEY IDENTITY(1,1),
     ID_VENTA INT NOT NULL FOREIGN KEY REFERENCES VENTAS(ID_VENTA),
@@ -307,9 +259,7 @@ CREATE TABLE DETALLE_VENTAS (
 );
 GO
 
--- =============================================
 -- 3. INSERCIÓN DE DATOS MAESTROS
--- =============================================
 
 -- Geografía
 INSERT INTO REGION (ID_REGION, REGION) VALUES (1, 'NORTE'), (2, 'SUR'), (3, 'ESTE'), (4, 'OESTE');
@@ -400,9 +350,7 @@ SELECT * FROM CLIENTE
 USE SUPERMERCADO_JPV_V6;
 GO
 
--- =============================================
 -- 1. LIMPIEZA DE OBSTÁCULOS (Desconectar referencias)
--- =============================================
 
 -- Primero, buscamos si existe la restricción en VENTAS que apunta a VENDEDOR y la borramos
 DECLARE @ConstraintName NVARCHAR(200);
@@ -426,9 +374,7 @@ IF OBJECT_ID('VENDEDOR', 'U') IS NOT NULL
     DROP TABLE VENDEDOR;
 GO
 
--- =============================================
 -- 2. ASEGURAR DATOS PREVIOS (Evita el Error 547)
--- =============================================
 -- Si Genero o Provincias no existen, los inserts fallarán. Esto lo asegura:
 
 IF NOT EXISTS (SELECT * FROM Genero WHERE ID_Genero = 1)
@@ -440,9 +386,7 @@ IF NOT EXISTS (SELECT * FROM Genero WHERE ID_Genero = 2)
 -- (Nota: Asumimos que PROVINCIAS ya tiene datos del script anterior. 
 -- Si PROVINCIAS está vacía, necesitarás correr los inserts de provincias de nuevo).
 
--- =============================================
 -- 3. CREACIÓN DE TABLAS CORREGIDAS
--- =============================================
 
 CREATE TABLE VENDEDOR (
     ID_VENDEDOR INT PRIMARY KEY,
@@ -460,9 +404,7 @@ CREATE TABLE FOTOS_VENDEDOR (
 );
 GO
 
--- =============================================
 -- 4. INSERTAR DATOS (Orden Explícito para evitar errores)
--- =============================================
 
 -- IMPORTANTE: El orden aquí es (ID, NOMBRE, GENERO, PROVINCIA, SUCURSAL)
 INSERT INTO VENDEDOR (ID_VENDEDOR, VENDEDOR, id_genero, PROVINCIA, SUCURSAL) VALUES 
@@ -501,9 +443,7 @@ INSERT INTO FOTOS_VENDEDOR (ID_FOTO, ID_VENDEDOR, FOTO_VENDEDOR_URL) VALUES
 (15, 15, 'https://raw.githubusercontent.com/JUANCITOPENA/GENERADOR_IMAGENES_PERSONAS/refs/heads/main/FOTOS_PERSONAS/persona_15.png');
 GO
 
--- =============================================
 -- 5. RECONEXIÓN (Restaurar integridad con Ventas)
--- =============================================
 -- Volvemos a agregar la llave foránea a VENTAS para proteger los datos futuros
 ALTER TABLE VENTAS 
 ADD CONSTRAINT FK_VENTAS_VENDEDOR FOREIGN KEY (ID_VENDEDOR) REFERENCES VENDEDOR(ID_VENDEDOR);
@@ -554,9 +494,7 @@ INSERT INTO FOTO_PRODUCTOS (ID_Foto, ID_PRODUCTO, foto_Productos_url) VALUES
 (23, 23, 'https://raw.githubusercontent.com/JUANCITOPENA/GENERADOR_IMAGENES_PERSONAS/refs/heads/main/FOTOS_PRODUCTOS/producto_23.png');
 
 -- USUARIOS
--- =============================================
 -- INSERTAR REGISTROS (ENCRIPTANDO '123456')
--- =============================================
 -- Nota: HASHBYTES('SHA2_256', 'TuPassword') convierte el texto en un código binario seguro.
 
 INSERT INTO USUARIOS (ID_USUARIO, NOMBRE_USUARIO, PASSWORD, ROL, ID_REGION) VALUES 
@@ -572,9 +510,7 @@ INSERT INTO USUARIOS (ID_USUARIO, NOMBRE_USUARIO, PASSWORD, ROL, ID_REGION) VALU
 (10, 'María.Rodríguez', HASHBYTES('SHA2_256', '123456'), 'vendedor', 3);
 GO
 
--- =============================================
 -- EJEMPLO DE CÓMO VALIDAR EL LOGIN (PRUEBA)
--- =============================================
 /*
    Para verificar si una contraseña es correcta en tu sistema (Login),
    comparas el Hash de lo que escribe el usuario con el Hash guardado en la BD.
@@ -592,15 +528,11 @@ SELECT * FROM USUARIOS
 
 
 
--- =============================================
 -- 4. GENERACIÓN INTELIGENTE DE DATOS (SIMULACIÓN DE NEGOCIO REAL)
--- =============================================
 USE SUPERMERCADO_JPV_V6;
 GO
 
--- =============================================
 -- 1. ACTUALIZAR CATÁLOGO DE NCF (SEGÚN TU IMAGEN - e-CF)
--- =============================================
 -- Borramos los viejos tipos B01, B02...
 DELETE FROM TIPO_NCF;
 
@@ -612,18 +544,14 @@ INSERT INTO TIPO_NCF (ID_TIPO_NCF, CODIGO_INTERNO, SERIE_NCF, DESCRIPCION, REQUI
 (4, '45', 'E45', 'Comprobante Gubernamental', 1);
 GO
 
--- =============================================
 -- 2. LIMPIEZA DE DATOS (Para regenerar con formato E)
--- =============================================
 DELETE FROM DETALLE_VENTAS;
 DELETE FROM VENTAS;
 DBCC CHECKIDENT ('DETALLE_VENTAS', RESEED, 0);
 DBCC CHECKIDENT ('VENTAS', RESEED, 0);
 GO
 
--- =============================================
 -- 3. GENERADOR DE VENTAS (CORREGIDO: FECHAS + SERIE E)
--- =============================================
 SET NOCOUNT ON;
 
 DECLARE @FechaInicio DATE = '2023-01-01';
@@ -803,9 +731,7 @@ GO
 
 
 
--- =============================================
 -- 5. VISTA ANALÍTICA AVANZADA (ADAPTADA A RD)
--- =============================================
 CREATE OR ALTER VIEW VISTA_ANALITICA_DETALLADA AS
 SELECT 
     -- Identificadores y Tiempo
@@ -872,9 +798,7 @@ LEFT JOIN FOTOS_VENDEDOR FV ON VD.ID_VENDEDOR = FV.ID_VENDEDOR;
 GO
 
 
--- =============================================
 -- 4. CONSULTAR RESULTADOS
--- =============================================
 SELECT TOP 2000 
     ID_PEDIDO, 
     FECHA, 
@@ -890,9 +814,7 @@ ORDER BY NCF_GENERADO DESC; -- Ordenar por NCF para ver la secuencia
 
 
 
--- =============================================
 -- 6. VERIFICACIÓN FINAL
--- =============================================
 SELECT TOP 50 
     ID_PEDIDO, FECHA, Cliente, RNC_CEDULA, TIPO_COMPROBANTE, NCF_GENERADO, 
     Condicion_Pago, Canal_Venta, Nombre_Producto, VENTA_BRUTA 
@@ -941,9 +863,7 @@ ORDER BY MP.METODO, Cantidad DESC;
 USE SUPERMERCADO_JPV_V6;
 GO
 
--- =============================================
 -- 5. CREACIÓN DE LA VISTA COMPLETA (ACTUALIZADA V6)
--- =============================================
 
 CREATE OR ALTER VIEW VISTA_COMPLETA_VENTAS AS
 SELECT 
@@ -1015,9 +935,7 @@ GO
 SELECT TOP 10 * FROM VISTA_COMPLETA_VENTAS;
 GO
 
--- =============================================
 -- 2. CÁLCULO DE TOTALES (KPIs) ACTUALIZADOS
--- =============================================
 SELECT 
     -- Ingreso sin impuestos (Lo que realmente gana la empresa bruto)
     SUM(VCV.Venta_Neta) AS Ingreso_Neto_Total,
@@ -1046,9 +964,7 @@ SELECT
 FROM VISTA_COMPLETA_VENTAS VCV;
 GO
 
--- =============================================
 -- 3. RANKINGS (CTEs)
--- =============================================
 
 -- Ranking de Clientes (Por Venta Bruta)
 WITH Rankings_Clientes AS (
@@ -1091,9 +1007,7 @@ WITH Rankings_Productos AS (
 SELECT TOP 10 * FROM Rankings_Productos;
 GO
 
--- =============================================
 -- 4. VISTA ANALÍTICA AVANZADA (CON DATOS DGII, LOGÍSTICA Y CRÉDITO)
--- =============================================
 CREATE OR ALTER VIEW VISTA_ANALITICA_DETALLADA AS
 SELECT 
     -- Identificadores
@@ -1206,9 +1120,7 @@ GO
 SELECT * FROM VISTA_ANALITICA_DETALLADA
 
 
--- =============================================
 -- CONSULTAS BASICAS A LAS TABLAS (SIN CAMBIOS, SOLO PARA VALIDAR)
--- =============================================
 select * from USUARIOS;
 select * from CLIENTE;
 select * from VENDEDOR;
@@ -1224,9 +1136,7 @@ select * from DETALLE_VENTAS;
 USE SUPERMERCADO_JPV_V6;
 GO
 
--- =============================================
 -- 1. TABLA DE AUDITORÍA (CAJA NEGRA)
--- =============================================
 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'TABLA_AUDITORIA')
 BEGIN
     CREATE TABLE TABLA_AUDITORIA (
@@ -1241,9 +1151,7 @@ BEGIN
 END
 GO
 
--- =============================================
 -- 2. TRIGGER DE VALIDACIÓN DE STOCK (CRÍTICO)
--- =============================================
 -- Este trigger se dispara ANTES de que se inserte una venta.
 -- Si no hay stock, CANCELA la operación y devuelve un mensaje de error.
 
@@ -1291,9 +1199,7 @@ BEGIN
 END
 GO
 
--- =============================================
 -- 3. TRIGGER DE AUDITORÍA (Ejemplo en PRODUCTO)
--- =============================================
 -- Registra cualquier cambio de precio o nombre en la tabla de auditoría.
 
 CREATE OR ALTER TRIGGER TRG_AUDITORIA_PRODUCTO
@@ -1323,9 +1229,7 @@ BEGIN
 END
 GO
 
--- =============================================
 -- 4. PROCEDIMIENTOS ALMACENADOS: CRUD CLIENTES
--- =============================================
 
 -- A. CREAR CLIENTE
 CREATE OR ALTER PROCEDURE SP_CREAR_CLIENTE
@@ -1374,9 +1278,7 @@ BEGIN
 END
 GO
 
--- =============================================
 -- 5. PROCEDIMIENTO MAESTRO: PROCESAR FACTURACIÓN
--- =============================================
 -- Este SP es el cerebro del sistema. Maneja Stock, NCF y Ventas.
 
 CREATE OR ALTER PROCEDURE SP_FACTURAR_VENTA
@@ -1456,9 +1358,7 @@ BEGIN
 END
 GO
 
--- =============================================
 -- 6. EJEMPLOS DE PRUEBA (VALIDACIONES)
--- =============================================
 
 -- Prueba 1: Intentar vender algo con stock (Debe funcionar)
 -- Asumiendo Producto 1 tiene stock
@@ -1489,21 +1389,4 @@ GO
 -- Prueba 4: Ver cómo bajó el stock del producto 1
 SELECT ID_PRODUCTO, PRODUCTO, STOCK FROM PRODUCTO WHERE ID_PRODUCTO = 1;
 GO
-`
-
----
-
-## 11. 🤝 Contribucion
-1.  Hacer Fork del proyecto.
-2.  Crear rama (`git checkout -b feature/NuevaTabla`).
-3.  Commit de cambios (`git commit -m 'Add: Nueva funcionalidad'`).
-4.  Push a la rama (`git push origin feature/NuevaTabla`).
-5.  Abrir Pull Request.
-
----
-
-## 12. ⚖ Licencia
-Este proyecto esta bajo la Licencia **MIT**. Se permite el uso comercial, modificacion y distribucion bajo los terminos especificados.
-
----
-*Documentacion generada automaticamente por **Gemini AI Agent** el 2026-01-15*
+```
