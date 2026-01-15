@@ -2,13 +2,13 @@
    =============================================================================
    SCRIPT BASE DE DATOS: SUPERMERCADO_JPV_V6 (EDICION DOMINICANA / DGII)
    FECHA: 15 DE ENERO, 2026
-   AUTOR: ASISTENTE IA
-   DESCRIPCI”N: 
+   AUTOR: JUANCITO PE√ëA
+   DESCRIPCI√ìN: 
      - INCLUYE CONTROL DE NCF (FISCAL B01 / CONSUMIDOR B02)
-     - MANEJO DE RNC / C…DULA
-     - CONDICIONES DE PAGO (CONTADO, CR…DITO, TRANSFERENCIA)
+     - MANEJO DE RNC / C√âDULA
+     - CONDICIONES DE PAGO (CONTADO, CR√âDITO, TRANSFERENCIA)
      - TIPOS DE ENTREGA (ONLINE/DELIVERY vs TIENDA)
-     - MANTIENE TODA LA DATA HIST”RICA E IM¡GENES PREVIAS
+     - MANTIENE TODA LA DATA HIST√ìRICA E IM√ÅGENES PREVIAS
    =============================================================================
 */
 
@@ -28,10 +28,10 @@ USE SUPERMERCADO_JPV_V6;
 GO
 
 -- =============================================
--- 1. TABLAS CAT¡LOGOS Y MAESTRAS (MEJORADAS)
+-- 1. TABLAS CAT√ÅLOGOS Y MAESTRAS (MEJORADAS)
 -- =============================================
 
--- 1.1 Regiones y Provincias (GeografÌa)
+-- 1.1 Regiones y Provincias (Geograf√≠a)
 CREATE TABLE REGION (
     ID_REGION INT PRIMARY KEY,
     REGION VARCHAR(50) NOT NULL,
@@ -46,18 +46,18 @@ CREATE TABLE PROVINCIAS (
     longitud DECIMAL(9,6) NULL
 );
 
--- 1.2 GÈnero
+-- 1.2 G√©nero
 CREATE TABLE Genero (
     ID_Genero INT PRIMARY KEY,
     Genero VARCHAR(50) NOT NULL
 );
 
 -- 1.3 NUEVO: Tipos de NCF (Comprobantes Fiscales DGII)
--- Se mapea lo que pediste: "31" para CrÈdito Fiscal (B01) y "32" para Consumidor Final (B02)
+-- Se mapea lo que pediste: "31" para Cr√©dito Fiscal (B01) y "32" para Consumidor Final (B02)
 CREATE TABLE TIPO_NCF (
     ID_TIPO_NCF INT PRIMARY KEY,
     CODIGO_INTERNO VARCHAR(10) NOT NULL, -- Ej: '31', '32'
-    DESCRIPCION VARCHAR(100) NOT NULL,   -- Ej: 'Factura de CrÈdito Fiscal'
+    DESCRIPCION VARCHAR(100) NOT NULL,   -- Ej: 'Factura de Cr√©dito Fiscal'
     SERIE_NCF VARCHAR(3) NOT NULL,       -- Ej: 'B01', 'B02'
     REQUIERE_RNC BIT DEFAULT 0           -- 1 = Si, 0 = No
 );
@@ -65,38 +65,38 @@ CREATE TABLE TIPO_NCF (
 -- 1.4 NUEVO: Condiciones de Pago
 CREATE TABLE CONDICION_PAGO (
     ID_CONDICION INT PRIMARY KEY,
-    NOMBRE_CONDICION VARCHAR(50) NOT NULL, -- Contado, CrÈdito 30 dÌas, etc.
+    NOMBRE_CONDICION VARCHAR(50) NOT NULL, -- Contado, Cr√©dito 30 d√≠as, etc.
     ES_CREDITO BIT DEFAULT 0               -- Define si genera deuda
 );
 
--- 1.5 NUEVO: MÈtodo de Pago (El instrumento financiero)
+-- 1.5 NUEVO: M√©todo de Pago (El instrumento financiero)
 CREATE TABLE METODO_PAGO (
     ID_METODO INT PRIMARY KEY,
     METODO VARCHAR(50) NOT NULL -- Efectivo, Tarjeta, Cheque, Transferencia
 );
 
--- 1.6 NUEVO: MÈtodo de Entrega (LogÌstica)
+-- 1.6 NUEVO: M√©todo de Entrega (Log√≠stica)
 CREATE TABLE METODO_ENTREGA (
     ID_ENTREGA INT PRIMARY KEY,
-    TIPO_ENTREGA VARCHAR(50) NOT NULL, -- Pickup (Tienda), Delivery Local, EnvÌos Nacionales
+    TIPO_ENTREGA VARCHAR(50) NOT NULL, -- Pickup (Tienda), Delivery Local, Env√≠os Nacionales
     ES_ONLINE BIT DEFAULT 0
 );
 
--- 1.7 CLIENTE (MEJORADO CON RNC Y CR…DITO)
+-- 1.7 CLIENTE (MEJORADO CON RNC Y CR√âDITO)
 CREATE TABLE CLIENTE (
     ID_CLIENTE INT PRIMARY KEY,
     NOMBRE_CLIENTE VARCHAR(100) NOT NULL,
     APELLIDO_CLIENTE VARCHAR(100) NOT NULL,
     
     -- Datos Fiscales Rep. Dom.
-    RNC_CEDULA VARCHAR(20) NOT NULL, -- Puede ser CÈdula (11) o RNC (9)
+    RNC_CEDULA VARCHAR(20) NOT NULL, -- Puede ser C√©dula (11) o RNC (9)
     TIPO_PERSONA VARCHAR(20) NOT NULL, -- 'FISICA' o 'JURIDICA'
     
-    -- Datos de CrÈdito
+    -- Datos de Cr√©dito
     TIENE_CREDITO_APROBADO BIT DEFAULT 0,
     LIMITE_CREDITO DECIMAL(12,2) DEFAULT 0,
     
-    -- UbicaciÛn
+    -- Ubicaci√≥n
     DIRECCION VARCHAR(200) NULL,
     id_region INT NOT NULL FOREIGN KEY REFERENCES REGION(ID_REGION),
     id_provincia INT NULL FOREIGN KEY REFERENCES PROVINCIAS(id_provincia),
@@ -140,7 +140,7 @@ CREATE TABLE FOTO_PRODUCTOS (
 
 -- 1.10 USUARIOS (Seguridad)
 -- =============================================
--- ESTRUCTURA TABLA USUARIOS (CON ENCRIPTACI”N)
+-- ESTRUCTURA TABLA USUARIOS (CON ENCRIPTACI√ìN)
 -- =============================================
 
 IF OBJECT_ID('USUARIOS', 'U') IS NOT NULL
@@ -211,10 +211,10 @@ CREATE TABLE DETALLE_VENTAS (
 GO
 
 -- =============================================
--- 3. INSERCI”N DE DATOS MAESTROS
+-- 3. INSERCI√ìN DE DATOS MAESTROS
 -- =============================================
 
--- GeografÌa
+-- Geograf√≠a
 INSERT INTO REGION (ID_REGION, REGION) VALUES (1, 'NORTE'), (2, 'SUR'), (3, 'ESTE'), (4, 'OESTE');
 
 INSERT INTO PROVINCIAS (id_provincia, nombreProvincia, id_region, latitud, longitud) VALUES
@@ -222,7 +222,7 @@ INSERT INTO PROVINCIAS (id_provincia, nombreProvincia, id_region, latitud, longi
 (2, 'El Seibo', 1, 18.766667, -69.033333),
 (3, 'Hato Mayor', 1, 18.750000, -69.250000),
 (4, 'La Romana', 1, 18.433333, -68.966667),
-(5, 'San Pedro de MacorÌs', 1, 18.450000, -69.300000),
+(5, 'San Pedro de Macor√≠s', 1, 18.450000, -69.300000),
 (6, 'Santiago', 2, 19.450000, -70.700000),
 (7, 'Puerto Plata', 2, 19.800000, -70.700000),
 (8, 'Duarte', 2, 19.300000, -70.100000),
@@ -231,64 +231,64 @@ INSERT INTO PROVINCIAS (id_provincia, nombreProvincia, id_region, latitud, longi
 (11, 'Azua', 3, 18.450000, -70.733333),
 (12, 'Barahona', 3, 18.200000, -71.100000),
 (13, 'San Juan', 3, 18.800000, -71.200000),
-(14, 'San CristÛbal', 3, 18.416667, -70.100000),
+(14, 'San Crist√≥bal', 3, 18.416667, -70.100000),
 (15, 'Peravia', 3, 18.283333, -70.350000);
 
--- GÈnero
+-- G√©nero
 INSERT INTO Genero (ID_Genero, Genero) VALUES (1, 'Masculino'), (2, 'Femenino');
 
 -- NUEVO: Tipos de NCF
 INSERT INTO TIPO_NCF (ID_TIPO_NCF, CODIGO_INTERNO, SERIE_NCF, DESCRIPCION, REQUIERE_RNC) VALUES
-(1, '31', 'B01', 'VALOR FISCAL (CrÈdito Fiscal)', 1),
+(1, '31', 'B01', 'VALOR FISCAL (Cr√©dito Fiscal)', 1),
 (2, '32', 'B02', 'CONSUMIDOR FINAL', 0),
-(3, '34', 'B04', 'NOTA DE CR…DITO', 0),
-(4, '44', 'B14', 'R…GIMEN ESPECIAL', 1);
+(3, '34', 'B04', 'NOTA DE CR√âDITO', 0),
+(4, '44', 'B14', 'R√âGIMEN ESPECIAL', 1);
 
 -- NUEVO: Condiciones de Pago
 INSERT INTO CONDICION_PAGO (ID_CONDICION, NOMBRE_CONDICION, ES_CREDITO) VALUES
 (1, 'Contado', 0),
-(2, 'CrÈdito 15 DÌas', 1),
-(3, 'CrÈdito 30 DÌas', 1);
+(2, 'Cr√©dito 15 D√≠as', 1),
+(3, 'Cr√©dito 30 D√≠as', 1);
 
--- NUEVO: MÈtodos de Pago
+-- NUEVO: M√©todos de Pago
 INSERT INTO METODO_PAGO (ID_METODO, METODO) VALUES
 (1, 'Efectivo'),
-(2, 'Tarjeta de CrÈdito/DÈbito'),
+(2, 'Tarjeta de Cr√©dito/D√©bito'),
 (3, 'Transferencia Bancaria'),
 (4, 'Cheque');
 
--- NUEVO: MÈtodos de Entrega
+-- NUEVO: M√©todos de Entrega
 INSERT INTO METODO_ENTREGA (ID_ENTREGA, TIPO_ENTREGA, ES_ONLINE) VALUES
 (1, 'Retiro en Tienda (Offline)', 0),
 (2, 'Delivery Local', 1),
-(3, 'EnvÌo Nacional (MetroPac/Caribe Tours)', 1);
+(3, 'Env√≠o Nacional (MetroPac/Caribe Tours)', 1);
 
--- CLIENTES (Actualizado con RNC y LÛgica de Negocio)
--- Asignamos RNCs ficticios y LÌmites de crÈdito a algunos
+-- CLIENTES (Actualizado con RNC y L√≥gica de Negocio)
+-- Asignamos RNCs ficticios y L√≠mites de cr√©dito a algunos
 INSERT INTO CLIENTE (ID_CLIENTE, NOMBRE_CLIENTE, APELLIDO_CLIENTE, id_region, id_provincia, RNC_CEDULA, TIPO_PERSONA, TIENE_CREDITO_APROBADO, LIMITE_CREDITO, DIRECCION) VALUES 
 (1, 'Alejandro', 'Perez', 1, 1, '001-0012345-1', 'FISICA', 0, 0, 'Av. Libertad #23'), 
-(2, 'MarÌa', 'Vizcaino', 2, 6, '131-2345678-2', 'JURIDICA', 1, 50000, 'Calle El Sol #4, Zona Monumental'), 
-(3, 'JosÈ', 'Santana', 1, 2, '001-9988776-3', 'FISICA', 0, 0, 'Calle Duarte #10'),
+(2, 'Mar√≠a', 'Vizcaino', 2, 6, '131-2345678-2', 'JURIDICA', 1, 50000, 'Calle El Sol #4, Zona Monumental'), 
+(3, 'Jos√©', 'Santana', 1, 2, '001-9988776-3', 'FISICA', 0, 0, 'Calle Duarte #10'),
 (4, 'Laura', 'Diaz', 2, 7, '402-1122334-4', 'JURIDICA', 1, 100000, 'Malecon #55'), 
 (5, 'Carlos', 'Bergara', 1, 3, '001-5544332-5', 'FISICA', 0, 0, 'Sector Los Cajuiles'), 
-(6, 'LucÌa', 'Ramos', 2, 8, '056-0000123-1', 'FISICA', 0, 0, 'Av. 27 de Febrero'),
+(6, 'Luc√≠a', 'Ramos', 2, 8, '056-0000123-1', 'FISICA', 0, 0, 'Av. 27 de Febrero'),
 (7, 'Juan', 'Comila', 1, 4, '101-5555555-5', 'JURIDICA', 1, 75000, 'Zona Franca La Romana'), 
 (8, 'Ana', 'Gabriel', 2, 9, '001-0000001-1', 'FISICA', 0, 0, 'Calle Mella'), 
 (9, 'Luis', 'Diaz', 1, 5, '402-9999999-9', 'FISICA', 1, 5000, 'Barrio Restauracion'),
 (10, 'Carmen', 'Santana', 2, 10, '130-1212121-2', 'JURIDICA', 1, 200000, 'Av. Rivas'), 
-(11, 'Miguel', 'Ramos', 1, 1, '223-3344556-6', 'FISICA', 0, 0, 'Hig¸ey Centro'), 
-(12, 'SofÌa', 'Comila', 2, 6, '031-1111222-2', 'FISICA', 0, 0, 'Los Jardines'),
+(11, 'Miguel', 'Ramos', 1, 1, '223-3344556-6', 'FISICA', 0, 0, 'Hig√ºey Centro'), 
+(12, 'Sof√≠a', 'Comila', 2, 6, '031-1111222-2', 'FISICA', 0, 0, 'Los Jardines'),
 (13, 'Pablo', 'Perez', 1, 2, '001-1234567-8', 'FISICA', 0, 0, 'El Seibo'), 
 (14, 'Isabel', 'Vizcaino', 2, 7, '102-3333333-3', 'JURIDICA', 1, 60000, 'Plaza Turistica'), 
 (15, 'Diego', 'Santana', 1, 3, '402-8888888-8', 'FISICA', 0, 0, 'Hato Mayor'),
 (16, 'Paula', 'Diaz', 2, 8, '001-7777777-7', 'FISICA', 0, 0, 'San Francisco'), 
 (17, 'Francisco', 'Bergara', 1, 4, '131-5556667-7', 'JURIDICA', 1, 150000, 'Casa de Campo'), 
 (18, 'Marta', 'Ramos', 2, 9, '054-2222222-2', 'FISICA', 0, 0, 'Moca Centro'),
-(19, 'Antonio', 'Comila', 1, 5, '001-4444444-4', 'FISICA', 0, 0, 'SPM MalecÛn'), 
+(19, 'Antonio', 'Comila', 1, 5, '001-4444444-4', 'FISICA', 0, 0, 'SPM Malec√≥n'), 
 (20, 'Elena', 'Gabrie', 2, 10, '402-3332221-1', 'FISICA', 1, 10000, 'La Vega'), 
 (21, 'Javier', 'Diaz', 1, 1, '001-1111111-1', 'FISICA', 0, 0, 'Bavaro'),
 (22, 'Sara', 'Santana', 2, 6, '031-9999999-9', 'JURIDICA', 1, 80000, 'Gurabo'), 
-(23, 'AndrÈs', 'Ramos', 1, 2, '001-6666666-6', 'FISICA', 0, 0, 'Miches'), 
+(23, 'Andr√©s', 'Ramos', 1, 2, '001-6666666-6', 'FISICA', 0, 0, 'Miches'), 
 (24, 'Claudia', 'Comila', 2, 7, '402-5555555-5', 'FISICA', 0, 0, 'Sosua'),
 (25, 'Manuel', 'Perez', 1, 3, '101-2222222-2', 'JURIDICA', 1, 300000, 'Sabana de la Mar'), 
 (26, 'Patricia', 'Vizcaino', 2, 8, '001-8888888-8', 'FISICA', 0, 0, 'Tenares'), 
@@ -304,10 +304,10 @@ USE SUPERMERCADO_JPV_V6;
 GO
 
 -- =============================================
--- 1. LIMPIEZA DE OBST¡CULOS (Desconectar referencias)
+-- 1. LIMPIEZA DE OBST√ÅCULOS (Desconectar referencias)
 -- =============================================
 
--- Primero, buscamos si existe la restricciÛn en VENTAS que apunta a VENDEDOR y la borramos
+-- Primero, buscamos si existe la restricci√≥n en VENTAS que apunta a VENDEDOR y la borramos
 DECLARE @ConstraintName NVARCHAR(200);
 SELECT @ConstraintName = name 
 FROM sys.foreign_keys 
@@ -317,14 +317,14 @@ IF @ConstraintName IS NOT NULL
 BEGIN
     DECLARE @SQL NVARCHAR(MAX) = 'ALTER TABLE VENTAS DROP CONSTRAINT ' + @ConstraintName;
     EXEC(@SQL);
-    PRINT 'RestricciÛn en VENTAS eliminada temporalmente.';
+    PRINT 'Restricci√≥n en VENTAS eliminada temporalmente.';
 END
 
 -- Borramos la tabla de fotos (hija directa)
 IF OBJECT_ID('FOTOS_VENDEDOR', 'U') IS NOT NULL 
     DROP TABLE FOTOS_VENDEDOR;
 
--- Ahora sÌ podemos borrar VENDEDOR
+-- Ahora s√≠ podemos borrar VENDEDOR
 IF OBJECT_ID('VENDEDOR', 'U') IS NOT NULL 
     DROP TABLE VENDEDOR;
 GO
@@ -332,7 +332,7 @@ GO
 -- =============================================
 -- 2. ASEGURAR DATOS PREVIOS (Evita el Error 547)
 -- =============================================
--- Si Genero o Provincias no existen, los inserts fallar·n. Esto lo asegura:
+-- Si Genero o Provincias no existen, los inserts fallar√°n. Esto lo asegura:
 
 IF NOT EXISTS (SELECT * FROM Genero WHERE ID_Genero = 1)
     INSERT INTO Genero (ID_Genero, Genero) VALUES (1, 'Masculino');
@@ -341,10 +341,10 @@ IF NOT EXISTS (SELECT * FROM Genero WHERE ID_Genero = 2)
     INSERT INTO Genero (ID_Genero, Genero) VALUES (2, 'Femenino');
 
 -- (Nota: Asumimos que PROVINCIAS ya tiene datos del script anterior. 
--- Si PROVINCIAS est· vacÌa, necesitar·s correr los inserts de provincias de nuevo).
+-- Si PROVINCIAS est√° vac√≠a, necesitar√°s correr los inserts de provincias de nuevo).
 
 -- =============================================
--- 3. CREACI”N DE TABLAS CORREGIDAS
+-- 3. CREACI√ìN DE TABLAS CORREGIDAS
 -- =============================================
 
 CREATE TABLE VENDEDOR (
@@ -364,10 +364,10 @@ CREATE TABLE FOTOS_VENDEDOR (
 GO
 
 -- =============================================
--- 4. INSERTAR DATOS (Orden ExplÌcito para evitar errores)
+-- 4. INSERTAR DATOS (Orden Expl√≠cito para evitar errores)
 -- =============================================
 
--- IMPORTANTE: El orden aquÌ es (ID, NOMBRE, GENERO, PROVINCIA, SUCURSAL)
+-- IMPORTANTE: El orden aqu√≠ es (ID, NOMBRE, GENERO, PROVINCIA, SUCURSAL)
 INSERT INTO VENDEDOR (ID_VENDEDOR, VENDEDOR, id_genero, PROVINCIA, SUCURSAL) VALUES 
 (1, 'Juan Perez', 1, 1, 'Sucursal 1'),
 (2, 'Maria Vizcaino', 2, 6, 'Sucursal 2'), -- Corregido prov 6 (Stgo) para coincidir con tu data original
@@ -379,10 +379,10 @@ INSERT INTO VENDEDOR (ID_VENDEDOR, VENDEDOR, id_genero, PROVINCIA, SUCURSAL) VAL
 (8, 'Juan Gabriel', 1, 9, 'Sucursal 2'), 
 (9, 'Carlos Santos', 1, 5, 'Sucursal 2'), 
 (10, 'Julio Linarez', 1, 10, 'Sucursal 2'), 
-(11, 'Pedro GÛmez', 1, 11, 'Sucursal 3'), 
-(12, 'MarÌa RodrÌguez', 2, 12, 'Sucursal 3'),
-(13, 'Alejandro PeÒa', 1, 13, 'Sucursal 3'), 
-(14, 'LucÌa Ramirez', 2, 14, 'Sucursal 3'), 
+(11, 'Pedro G√≥mez', 1, 11, 'Sucursal 3'), 
+(12, 'Mar√≠a Rodr√≠guez', 2, 12, 'Sucursal 3'),
+(13, 'Alejandro Pe√±a', 1, 13, 'Sucursal 3'), 
+(14, 'Luc√≠a Ramirez', 2, 14, 'Sucursal 3'), 
 (15, 'Laura de la Rosa', 2, 15, 'Sucursal 3');
 
 -- Insertar Fotos
@@ -405,14 +405,14 @@ INSERT INTO FOTOS_VENDEDOR (ID_FOTO, ID_VENDEDOR, FOTO_VENDEDOR_URL) VALUES
 GO
 
 -- =============================================
--- 5. RECONEXI”N (Restaurar integridad con Ventas)
+-- 5. RECONEXI√ìN (Restaurar integridad con Ventas)
 -- =============================================
--- Volvemos a agregar la llave for·nea a VENTAS para proteger los datos futuros
+-- Volvemos a agregar la llave for√°nea a VENTAS para proteger los datos futuros
 ALTER TABLE VENTAS 
 ADD CONSTRAINT FK_VENTAS_VENDEDOR FOREIGN KEY (ID_VENDEDOR) REFERENCES VENDEDOR(ID_VENDEDOR);
 GO
 
--- VerificaciÛn final
+-- Verificaci√≥n final
 SELECT TOP 5 * FROM VENDEDOR;
 SELECT TOP 5 * FROM FOTOS_VENDEDOR;
 
@@ -460,7 +460,7 @@ INSERT INTO FOTO_PRODUCTOS (ID_Foto, ID_PRODUCTO, foto_Productos_url) VALUES
 -- =============================================
 -- INSERTAR REGISTROS (ENCRIPTANDO '123456')
 -- =============================================
--- Nota: HASHBYTES('SHA2_256', 'TuPassword') convierte el texto en un cÛdigo binario seguro.
+-- Nota: HASHBYTES('SHA2_256', 'TuPassword') convierte el texto en un c√≥digo binario seguro.
 
 INSERT INTO USUARIOS (ID_USUARIO, NOMBRE_USUARIO, PASSWORD, ROL, ID_REGION) VALUES 
 (1, 'Juancito', HASHBYTES('SHA2_256', '123456'), 'admin', NULL),
@@ -471,15 +471,15 @@ INSERT INTO USUARIOS (ID_USUARIO, NOMBRE_USUARIO, PASSWORD, ROL, ID_REGION) VALU
 (6, 'Luis.Diaz', HASHBYTES('SHA2_256', '123456'), 'vendedor', 1),
 (7, 'Jorge.Ramos', HASHBYTES('SHA2_256', '123456'), 'vendedor', 2),
 (8, 'Juan.Comila', HASHBYTES('SHA2_256', '123456'), 'vendedor', 2),
-(9, 'Pedro.GÛmez', HASHBYTES('SHA2_256', '123456'), 'vendedor', 3),
-(10, 'MarÌa.RodrÌguez', HASHBYTES('SHA2_256', '123456'), 'vendedor', 3);
+(9, 'Pedro.G√≥mez', HASHBYTES('SHA2_256', '123456'), 'vendedor', 3),
+(10, 'Mar√≠a.Rodr√≠guez', HASHBYTES('SHA2_256', '123456'), 'vendedor', 3);
 GO
 
 -- =============================================
--- EJEMPLO DE C”MO VALIDAR EL LOGIN (PRUEBA)
+-- EJEMPLO DE C√ìMO VALIDAR EL LOGIN (PRUEBA)
 -- =============================================
 /*
-   Para verificar si una contraseÒa es correcta en tu sistema (Login),
+   Para verificar si una contrase√±a es correcta en tu sistema (Login),
    comparas el Hash de lo que escribe el usuario con el Hash guardado en la BD.
 */
 
@@ -496,22 +496,22 @@ SELECT * FROM USUARIOS
 
 
 -- =============================================
--- 4. GENERACI”N INTELIGENTE DE DATOS (SIMULACI”N DE NEGOCIO REAL)
+-- 4. GENERACI√ìN INTELIGENTE DE DATOS (SIMULACI√ìN DE NEGOCIO REAL)
 -- =============================================
 USE SUPERMERCADO_JPV_V6;
 GO
 
 -- =============================================
--- 1. ACTUALIZAR CAT¡LOGO DE NCF (SEG⁄N TU IMAGEN - e-CF)
+-- 1. ACTUALIZAR CAT√ÅLOGO DE NCF (SEG√öN TU IMAGEN - e-CF)
 -- =============================================
 -- Borramos los viejos tipos B01, B02...
 DELETE FROM TIPO_NCF;
 
--- Insertamos los nuevos tipos de FacturaciÛn ElectrÛnica (Serie E)
+-- Insertamos los nuevos tipos de Facturaci√≥n Electr√≥nica (Serie E)
 INSERT INTO TIPO_NCF (ID_TIPO_NCF, CODIGO_INTERNO, SERIE_NCF, DESCRIPCION, REQUIERE_RNC) VALUES
-(1, '31', 'E31', 'Factura de CrÈdito Fiscal ElectrÛnica', 1),
-(2, '32', 'E32', 'Factura de Consumo ElectrÛnica', 0),
-(3, '44', 'E44', 'Comprobante para RegÌmenes Especiales', 1),
+(1, '31', 'E31', 'Factura de Cr√©dito Fiscal Electr√≥nica', 1),
+(2, '32', 'E32', 'Factura de Consumo Electr√≥nica', 0),
+(3, '44', 'E44', 'Comprobante para Reg√≠menes Especiales', 1),
 (4, '45', 'E45', 'Comprobante Gubernamental', 1);
 GO
 
@@ -584,14 +584,14 @@ BEGIN
 
     IF @ID_CLIENTE IS NOT NULL 
     BEGIN
-        -- C. LÛgica NCF ElectrÛnico (Serie E)
+        -- C. L√≥gica NCF Electr√≥nico (Serie E)
         -- Prioridad: Gubernamental -> Regimen Especial -> Fiscal -> Consumo
         
         DECLARE @Probabilidad FLOAT = RAND();
         
-        -- LÛgica: 
-        -- Si es JurÌdica, 70% E31, 10% E44 (Especial), 5% E45 (Gob), 15% E32 (Consumo/Gasto Menor)
-        -- Si es FÌsica, 95% E32, 5% E31 (Factura con valor fiscal nombre persona)
+        -- L√≥gica: 
+        -- Si es Jur√≠dica, 70% E31, 10% E44 (Especial), 5% E45 (Gob), 15% E32 (Consumo/Gasto Menor)
+        -- Si es F√≠sica, 95% E32, 5% E31 (Factura con valor fiscal nombre persona)
 
         IF @TipoCliente = 'JURIDICA'
         BEGIN
@@ -611,15 +611,15 @@ BEGIN
             END
             ELSE
             BEGIN
-                SET @ID_TIPO_NCF = 1; -- E31 CrÈdito Fiscal
+                SET @ID_TIPO_NCF = 1; -- E31 Cr√©dito Fiscal
                 SET @SerieNCF = 'E31';
                 SET @SecuenciaNCF = @SeqE31;
                 SET @SeqE31 = @SeqE31 + 1;
             END
         END
-        ELSE -- Cliente FÌsico
+        ELSE -- Cliente F√≠sico
         BEGIN
-            IF @Probabilidad > 0.90 -- A veces una persona fÌsica pide factura fiscal
+            IF @Probabilidad > 0.90 -- A veces una persona f√≠sica pide factura fiscal
             BEGIN
                 SET @ID_TIPO_NCF = 1; -- E31
                 SET @SerieNCF = 'E31';
@@ -635,14 +635,14 @@ BEGIN
             END
         END
 
-        -- Formato e-CF: Serie (3 chars) + Secuencia (10 dÌgitos generalmente para e-CF)
+        -- Formato e-CF: Serie (3 chars) + Secuencia (10 d√≠gitos generalmente para e-CF)
         -- Ejemplo: E310000037301
         SET @NCF_Full = @SerieNCF + RIGHT('0000000000' + CAST(@SecuenciaNCF AS VARCHAR(20)), 10);
 
-        -- D. CondiciÛn de Pago
+        -- D. Condici√≥n de Pago
         IF @TieneCredito = 1 AND RAND() > 0.6
         BEGIN
-            SET @ID_CONDICION = 3; -- CrÈdito
+            SET @ID_CONDICION = 3; -- Cr√©dito
             SET @ID_METODO_PAGO = 4; -- Cheque
         END
         ELSE
@@ -651,7 +651,7 @@ BEGIN
             SELECT TOP 1 @ID_METODO_PAGO = ID_METODO FROM METODO_PAGO WHERE ID_METODO IN (1,2,3) ORDER BY NEWID();
         END
 
-        -- E. MÈtodo de Entrega
+        -- E. M√©todo de Entrega
         IF @ID_METODO_PAGO IN (2,3) AND RAND() > 0.4
             SELECT TOP 1 @ID_ENTREGA = ID_ENTREGA FROM METODO_ENTREGA WHERE ES_ONLINE = 1 ORDER BY NEWID();
         ELSE
@@ -707,7 +707,7 @@ GO
 
 
 -- =============================================
--- 5. VISTA ANALÕTICA AVANZADA (ADAPTADA A RD)
+-- 5. VISTA ANAL√çTICA AVANZADA (ADAPTADA A RD)
 -- =============================================
 CREATE OR ALTER VIEW VISTA_ANALITICA_DETALLADA AS
 SELECT 
@@ -731,11 +731,11 @@ SELECT
     CP.NOMBRE_CONDICION AS Condicion_Pago,
     MP.METODO AS Metodo_Pago,
     
-    -- LogÌstica
+    -- Log√≠stica
     ME.TIPO_ENTREGA,
-    CASE WHEN ME.ES_ONLINE = 1 THEN 'Online' ELSE 'Tienda FÌsica' END AS Canal_Venta,
+    CASE WHEN ME.ES_ONLINE = 1 THEN 'Online' ELSE 'Tienda F√≠sica' END AS Canal_Venta,
     
-    -- Vendedor y UbicaciÛn
+    -- Vendedor y Ubicaci√≥n
     VD.VENDEDOR AS Nombre_Vendedor,
     VD.SUCURSAL,
     P.nombreProvincia AS Provincia,
@@ -744,7 +744,7 @@ SELECT
     -- Producto
     PR.PRODUCTO AS Nombre_Producto,
     
-    -- MÈtricas Financieras (Con desglose ITBIS)
+    -- M√©tricas Financieras (Con desglose ITBIS)
     DV.CANTIDAD,
     CAST(DV.PRECIO_UNITARIO AS DECIMAL(18,2)) AS PRECIO_VENTA_SIN_ITBIS,
     CAST(PR.PRECIO_COMPRA AS DECIMAL(18,2)) AS COSTO_UNITARIO,
@@ -783,8 +783,8 @@ SELECT TOP 2000
     FECHA, 
     Cliente, 
     RNC_CEDULA, 
-    TIPO_COMPROBANTE, -- Ahora dir· "ElectrÛnica"
-    NCF_GENERADO,     -- Ahora ver·s E31..., E32...
+    TIPO_COMPROBANTE, -- Ahora dir√° "Electr√≥nica"
+    NCF_GENERADO,     -- Ahora ver√°s E31..., E32...
     VENTA_BRUTA 
 FROM VISTA_ANALITICA_DETALLADA 
 ORDER BY NCF_GENERADO DESC; -- Ordenar por NCF para ver la secuencia
@@ -794,7 +794,7 @@ ORDER BY NCF_GENERADO DESC; -- Ordenar por NCF para ver la secuencia
 
 
 -- =============================================
--- 6. VERIFICACI”N FINAL
+-- 6. VERIFICACI√ìN FINAL
 -- =============================================
 SELECT TOP 50 
     ID_PEDIDO, FECHA, Cliente, RNC_CEDULA, TIPO_COMPROBANTE, NCF_GENERADO, 
@@ -845,7 +845,7 @@ USE SUPERMERCADO_JPV_V6;
 GO
 
 -- =============================================
--- 5. CREACI”N DE LA VISTA COMPLETA (ACTUALIZADA V6)
+-- 5. CREACI√ìN DE LA VISTA COMPLETA (ACTUALIZADA V6)
 -- =============================================
 
 CREATE OR ALTER VIEW VISTA_COMPLETA_VENTAS AS
@@ -867,7 +867,7 @@ SELECT
     CP.NOMBRE_CONDICION AS Condicion_Pago,
     MP.METODO AS Metodo_Pago,
     
-    -- LOGÕSTICA (NUEVO)
+    -- LOG√çSTICA (NUEVO)
     ME.TIPO_ENTREGA,
     CASE WHEN ME.ES_ONLINE = 1 THEN 'Si' ELSE 'No' END AS Es_Online,
 
@@ -914,12 +914,12 @@ LEFT JOIN FOTO_PRODUCTOS FP ON PR.ID_PRODUCTO = FP.ID_PRODUCTO
 LEFT JOIN FOTOS_VENDEDOR FV ON VD.ID_VENDEDOR = FV.ID_VENDEDOR;
 GO
 
--- VerificaciÛn r·pida
+-- Verificaci√≥n r√°pida
 SELECT TOP 10 * FROM VISTA_COMPLETA_VENTAS;
 GO
 
 -- =============================================
--- 2. C¡LCULO DE TOTALES (KPIs) ACTUALIZADOS
+-- 2. C√ÅLCULO DE TOTALES (KPIs) ACTUALIZADOS
 -- =============================================
 SELECT 
     -- Ingreso sin impuestos (Lo que realmente gana la empresa bruto)
@@ -995,7 +995,7 @@ SELECT TOP 10 * FROM Rankings_Productos;
 GO
 
 -- =============================================
--- 4. VISTA ANALÕTICA AVANZADA (CON DATOS DGII, LOGÕSTICA Y CR…DITO)
+-- 4. VISTA ANAL√çTICA AVANZADA (CON DATOS DGII, LOG√çSTICA Y CR√âDITO)
 -- =============================================
 CREATE OR ALTER VIEW VISTA_ANALITICA_DETALLADA AS
 SELECT 
@@ -1021,12 +1021,12 @@ SELECT
     
     -- Datos de Pago y Entrega
     CP.NOMBRE_CONDICION AS Condicion_Pago,
-    CASE WHEN CP.ES_CREDITO = 1 THEN 'CrÈdito' ELSE 'Contado' END AS Tipo_Venta_Financiera,
+    CASE WHEN CP.ES_CREDITO = 1 THEN 'Cr√©dito' ELSE 'Contado' END AS Tipo_Venta_Financiera,
     MP.METODO AS Metodo_Pago,
     ME.TIPO_ENTREGA,
-    CASE WHEN ME.ES_ONLINE = 1 THEN 'Online' ELSE 'FÌsica' END AS Canal_Venta,
+    CASE WHEN ME.ES_ONLINE = 1 THEN 'Online' ELSE 'F√≠sica' END AS Canal_Venta,
 
-    -- Datos Vendedor y UbicaciÛn Geogr·fica
+    -- Datos Vendedor y Ubicaci√≥n Geogr√°fica
     V.ID_VENDEDOR,
     VD.VENDEDOR AS Nombre_Vendedor,
     G.Genero AS Genero_Vendedor,
@@ -1040,13 +1040,13 @@ SELECT
     DV.ID_PRODUCTO,
     PR.PRODUCTO AS Nombre_Producto,
     
-    -- MÈtricas Base
+    -- M√©tricas Base
     DV.CANTIDAD,
     CAST(DV.PRECIO_UNITARIO AS DECIMAL(18,2)) AS PRECIO_VENTA_UNITARIO,
     CAST(PR.PRECIO_COMPRA AS DECIMAL(18,2)) AS COSTO_UNITARIO,
     CAST(DV.ITBIS_UNITARIO AS DECIMAL(18,2)) AS ITBIS_UNITARIO,
     
-    -- C·lculos de LÌnea Financieros
+    -- C√°lculos de L√≠nea Financieros
     CAST(DV.SUBTOTAL AS DECIMAL(18,2)) AS VENTA_NETA, -- Base imponible
     CAST((DV.ITBIS_UNITARIO * DV.CANTIDAD) AS DECIMAL(18,2)) AS TOTAL_ITBIS, -- Impuesto
     CAST((DV.SUBTOTAL + (DV.ITBIS_UNITARIO * DV.CANTIDAD)) AS DECIMAL(18,2)) AS VENTA_BRUTA, -- Total a pagar
@@ -1128,7 +1128,7 @@ USE SUPERMERCADO_JPV_V6;
 GO
 
 -- =============================================
--- 1. TABLA DE AUDITORÕA (CAJA NEGRA)
+-- 1. TABLA DE AUDITOR√çA (CAJA NEGRA)
 -- =============================================
 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'TABLA_AUDITORIA')
 BEGIN
@@ -1145,10 +1145,10 @@ END
 GO
 
 -- =============================================
--- 2. TRIGGER DE VALIDACI”N DE STOCK (CRÕTICO)
+-- 2. TRIGGER DE VALIDACI√ìN DE STOCK (CR√çTICO)
 -- =============================================
 -- Este trigger se dispara ANTES de que se inserte una venta.
--- Si no hay stock, CANCELA la operaciÛn y devuelve un mensaje de error.
+-- Si no hay stock, CANCELA la operaci√≥n y devuelve un mensaje de error.
 
 CREATE OR ALTER TRIGGER TRG_VALIDAR_STOCK_VENTA
 ON DETALLE_VENTAS
@@ -1157,7 +1157,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- Verificar si alg˙n producto insertado excede el stock disponible
+    -- Verificar si alg√∫n producto insertado excede el stock disponible
     IF EXISTS (
         SELECT 1
         FROM inserted i
@@ -1165,7 +1165,7 @@ BEGIN
         WHERE p.STOCK < i.CANTIDAD
     )
     BEGIN
-        -- Obtener el nombre del producto que fallÛ para el mensaje
+        -- Obtener el nombre del producto que fall√≥ para el mensaje
         DECLARE @NombreProducto VARCHAR(100);
         DECLARE @StockActual INT;
         DECLARE @CantidadSolicitada INT;
@@ -1178,15 +1178,15 @@ BEGIN
         INNER JOIN PRODUCTO p ON i.ID_PRODUCTO = p.ID_PRODUCTO
         WHERE p.STOCK < i.CANTIDAD;
 
-        -- Cancelar la transacciÛn
+        -- Cancelar la transacci√≥n
         ROLLBACK TRANSACTION;
 
         -- Lanzar mensaje de error personalizado
-        RAISERROR ('ERROR CRÕTICO DE INVENTARIO: No se puede facturar el producto "%s". Stock Actual: %d, Solicitado: %d.', 16, 1, @NombreProducto, @StockActual, @CantidadSolicitada);
+        RAISERROR ('ERROR CR√çTICO DE INVENTARIO: No se puede facturar el producto "%s". Stock Actual: %d, Solicitado: %d.', 16, 1, @NombreProducto, @StockActual, @CantidadSolicitada);
         RETURN;
     END
 
-    -- Si hay stock, descontamos autom·ticamente del inventario
+    -- Si hay stock, descontamos autom√°ticamente del inventario
     UPDATE p
     SET p.STOCK = p.STOCK - i.CANTIDAD
     FROM PRODUCTO p
@@ -1195,9 +1195,9 @@ END
 GO
 
 -- =============================================
--- 3. TRIGGER DE AUDITORÕA (Ejemplo en PRODUCTO)
+-- 3. TRIGGER DE AUDITOR√çA (Ejemplo en PRODUCTO)
 -- =============================================
--- Registra cualquier cambio de precio o nombre en la tabla de auditorÌa.
+-- Registra cualquier cambio de precio o nombre en la tabla de auditor√≠a.
 
 CREATE OR ALTER TRIGGER TRG_AUDITORIA_PRODUCTO
 ON PRODUCTO
@@ -1209,7 +1209,7 @@ BEGIN
     DECLARE @DatosAnt XML;
     DECLARE @DatosNue XML;
 
-    -- Determinar la acciÛn
+    -- Determinar la acci√≥n
     IF EXISTS (SELECT * FROM inserted) AND EXISTS (SELECT * FROM deleted)
         SET @Accion = 'UPDATE';
     ELSE IF EXISTS (SELECT * FROM inserted)
@@ -1245,10 +1245,10 @@ AS
 BEGIN
     SET NOCOUNT ON;
     
-    -- ValidaciÛn simple de duplicados
+    -- Validaci√≥n simple de duplicados
     IF EXISTS (SELECT 1 FROM CLIENTE WHERE RNC_CEDULA = @RNC_Cedula)
     BEGIN
-        RAISERROR('El Cliente con RNC/CÈdula %s ya existe.', 16, 1, @RNC_Cedula);
+        RAISERROR('El Cliente con RNC/C√©dula %s ya existe.', 16, 1, @RNC_Cedula);
         RETURN;
     END
 
@@ -1278,14 +1278,14 @@ END
 GO
 
 -- =============================================
--- 5. PROCEDIMIENTO MAESTRO: PROCESAR FACTURACI”N
+-- 5. PROCEDIMIENTO MAESTRO: PROCESAR FACTURACI√ìN
 -- =============================================
 -- Este SP es el cerebro del sistema. Maneja Stock, NCF y Ventas.
 
 CREATE OR ALTER PROCEDURE SP_FACTURAR_VENTA
     @ID_Cliente INT,
     @ID_Vendedor INT,
-    @ID_Producto INT, -- Simplificado para 1 producto (en app real usarÌas JSON o tabla temporal para varios)
+    @ID_Producto INT, -- Simplificado para 1 producto (en app real usar√≠as JSON o tabla temporal para varios)
     @Cantidad INT,
     @ID_MetodoPago INT,
     @ID_Entrega INT
@@ -1295,7 +1295,7 @@ BEGIN
     BEGIN TRY
         BEGIN TRANSACTION;
 
-        -- 1. Validar Existencia (Doble validaciÛn: AquÌ y en el Trigger)
+        -- 1. Validar Existencia (Doble validaci√≥n: Aqu√≠ y en el Trigger)
         DECLARE @Stock INT, @Precio DECIMAL(9,2), @NombreProd VARCHAR(100);
         SELECT @Stock = STOCK, @Precio = PRECIO_VENTA, @NombreProd = PRODUCTO 
         FROM PRODUCTO WHERE ID_PRODUCTO = @ID_Producto;
@@ -1310,10 +1310,10 @@ BEGIN
         SELECT @TipoPersona = TIPO_PERSONA, @Region = id_region 
         FROM CLIENTE WHERE ID_CLIENTE = @ID_Cliente;
 
-        -- 3. LÛgica de NCF (Serie E)
+        -- 3. L√≥gica de NCF (Serie E)
         DECLARE @ID_TipoNCF INT, @SerieNCF VARCHAR(3), @NCF_Generado VARCHAR(19);
         
-        -- LÛgica simple: JurÌdica -> E31, FÌsica -> E32
+        -- L√≥gica simple: Jur√≠dica -> E31, F√≠sica -> E32
         IF @TipoPersona = 'JURIDICA'
         BEGIN
             SET @ID_TipoNCF = 1; -- E31
@@ -1328,7 +1328,7 @@ BEGIN
         -- Generar Secuencia Aleatoria (En prod usar SEQUENCE object)
         SET @NCF_Generado = @SerieNCF + RIGHT('0000000000' + CAST(ABS(CHECKSUM(NEWID())) % 10000000 AS VARCHAR), 10);
 
-        -- 4. C·lculos
+        -- 4. C√°lculos
         DECLARE @ITBIS_Unitario DECIMAL(9,2) = @Precio * 0.18;
         DECLARE @SubTotal DECIMAL(12,2) = @Cantidad * @Precio;
         DECLARE @TotalImpuesto DECIMAL(12,2) = @Cantidad * @ITBIS_Unitario;
@@ -1340,7 +1340,7 @@ BEGIN
 
         DECLARE @NewVentaID INT = SCOPE_IDENTITY();
 
-        -- 6. Insertar Detalle (Esto disparar· el TRIGGER TRG_VALIDAR_STOCK_VENTA)
+        -- 6. Insertar Detalle (Esto disparar√° el TRIGGER TRG_VALIDAR_STOCK_VENTA)
         INSERT INTO DETALLE_VENTAS (ID_VENTA, ID_PRODUCTO, CANTIDAD, PRECIO_UNITARIO, ITBIS_UNITARIO, SUBTOTAL)
         VALUES (@NewVentaID, @ID_Producto, @Cantidad, @Precio, @ITBIS_Unitario, @SubTotal);
 
@@ -1374,7 +1374,7 @@ EXEC SP_FACTURAR_VENTA
     @ID_Entrega = 1;
 GO
 
--- Prueba 2: Intentar vender M¡S de lo que hay (Debe fallar y dar mensaje)
+-- Prueba 2: Intentar vender M√ÅS de lo que hay (Debe fallar y dar mensaje)
 -- Pongamos una cantidad absurda
 EXEC SP_FACTURAR_VENTA 
     @ID_Cliente = 1, 
@@ -1385,10 +1385,10 @@ EXEC SP_FACTURAR_VENTA
     @ID_Entrega = 1;
 GO
 
--- Prueba 3: Ver AuditorÌa despuÈs de los cambios
+-- Prueba 3: Ver Auditor√≠a despu√©s de los cambios
 SELECT * FROM TABLA_AUDITORIA ORDER BY FECHA DESC;
 GO
 
--- Prueba 4: Ver cÛmo bajÛ el stock del producto 1
+-- Prueba 4: Ver c√≥mo baj√≥ el stock del producto 1
 SELECT ID_PRODUCTO, PRODUCTO, STOCK FROM PRODUCTO WHERE ID_PRODUCTO = 1;
 GO
