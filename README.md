@@ -92,7 +92,7 @@ ORDER BY TotalVendido DESC;
    =============================================================================
    SCRIPT BASE DE DATOS: SUPERMERCADO_JPV_V6 (EDICION DOMINICANA / DGII)
    FECHA: 15 DE ENERO, 2026
-   AUTOR: ASISTENTE IA
+   AUTOR: JUANCITO PEÑA
    DESCRIPCIÓN: 
      - INCLUYE CONTROL DE NCF (FISCAL B01 / CONSUMIDOR B02)
      - MANEJO DE RNC / CÉDULA
