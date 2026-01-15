@@ -1,123 +1,110 @@
 APP_STYLE = """
-    /* GLOBAL */
+    /* GLOBAL SETTINGS - LIGHT THEME */
     QWidget {
-        font-family: 'Segoe UI', sans-serif;
+        font-family: 'Segoe UI', 'Arial', sans-serif;
         font-size: 14px;
-        color: #333;
+        color: #000000;
+        background-color: #ffffff;
     }
+    
     QMainWindow, QWidget#MainContent {
-        background-color: #ecf0f1;
+        background-color: #f8f9fa;
     }
-
-    /* SIDEBAR */
+    
+    /* SIDEBAR (Classic Blue ERP Style) */
     QFrame#Sidebar {
-        background-color: #2c3e50;
-        border-right: 1px solid #1a252f;
+        background-color: #004085;
+        border-right: 2px solid #002752;
     }
     QLabel#SidebarTitle {
-        color: white;
-        font-size: 20px;
+        color: #ffffff;
+        font-size: 22px;
         font-weight: bold;
         padding: 20px;
+        background-color: #002752;
     }
+    
+    /* SIDEBAR BUTTONS */
     QPushButton.SidebarBtn {
         background-color: transparent;
-        color: #bdc3c7;
+        color: #ffffff;
         text-align: left;
         padding: 15px 20px;
         border: none;
         font-size: 16px;
+        border-bottom: 1px solid #0056b3;
     }
     QPushButton.SidebarBtn:hover {
-        background-color: #34495e;
-        color: white;
-        border-left: 4px solid #3498db;
+        background-color: #0056b3;
+        font-weight: bold;
+        padding-left: 25px;
     }
     QPushButton.SidebarBtn:checked {
-        background-color: #34495e;
-        color: white;
-        border-left: 4px solid #1abc9c;
+        background-color: #ffc107; /* Active Yellow */
+        color: #000000;
         font-weight: bold;
     }
 
-    /* CARDS */
-    QFrame.Card {
-        background-color: white;
-        border-radius: 10px;
-        border: 1px solid #e0e0e0;
+    /* CARDS & PANELS */
+    QFrame, QGroupBox {
+        background-color: #ffffff;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
     }
-    QLabel.CardTitle {
-        font-size: 14px;
-        color: #7f8c8d;
-        font-weight: bold;
+    QLabel {
+        color: #212529;
     }
-    QLabel.CardValue {
-        font-size: 28px;
-        color: #2c3e50;
+    QLabel.Header {
+        font-size: 24px;
         font-weight: bold;
+        color: #004085;
+        margin-bottom: 15px;
     }
     
-    /* FORMS */
-    QLineEdit, QComboBox, QSpinBox, QDateEdit {
-        background-color: white;
-        border: 1px solid #ced4da;
-        border-radius: 5px;
+    /* INPUTS */
+    QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox {
+        background-color: #ffffff;
+        border: 2px solid #ced4da;
+        border-radius: 4px;
         padding: 8px;
-        min-height: 20px;
+        color: #000000;
     }
     QLineEdit:focus, QComboBox:focus {
-        border: 2px solid #3498db;
+        border: 2px solid #007bff;
+        background-color: #f0f8ff;
     }
-    QLabel.FormLabel {
-        font-weight: bold;
-        color: #34495e;
-    }
-
+    
     /* BUTTONS */
     QPushButton {
-        background-color: #2980b9;
+        background-color: #007bff;
         color: white;
+        border: none;
+        padding: 10px 20px;
         border-radius: 5px;
-        padding: 10px 15px;
         font-weight: bold;
     }
     QPushButton:hover {
-        background-color: #3498db;
-    }
-    QPushButton#dangerBtn {
-        background-color: #c0392b;
-    }
-    QPushButton#dangerBtn:hover {
-        background-color: #e74c3c;
+        background-color: #0056b3;
     }
     QPushButton#successBtn {
-        background-color: #27ae60;
+        background-color: #28a745;
     }
-    QPushButton#successBtn:hover {
-        background-color: #2ecc71;
+    QPushButton#dangerBtn {
+        background-color: #dc3545;
     }
-    QPushButton#warningBtn {
-        background-color: #f39c12;
-        color: white;
-    }
-
+    
     /* TABLES */
     QTableWidget {
-        background-color: white;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        gridline-color: #ecf0f1;
-        selection-background-color: #3498db;
-        selection-color: white;
+        background-color: #ffffff;
+        gridline-color: #dee2e6;
+        color: #000000;
+        selection-background-color: #007bff;
+        selection-color: #ffffff;
     }
     QHeaderView::section {
-        background-color: #34495e;
-        color: white;
+        background-color: #343a40;
+        color: #ffffff;
         padding: 8px;
-        border: none;
         font-weight: bold;
-    }
-    QTableWidget::item {
-        padding: 5px;
     }
 """

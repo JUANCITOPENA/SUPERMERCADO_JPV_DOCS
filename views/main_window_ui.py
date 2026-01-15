@@ -1,17 +1,15 @@
-from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
-                             QPushButton, QStackedWidget, QLabel, QFrame)
+from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QStackedWidget, QLabel, QFrame)
 from PyQt6.QtCore import Qt
 from assets.styles import APP_STYLE
-try:
-    import qtawesome as qta
-except ImportError:
-    qta = None
+try: import qtawesome as qta
+except: qta = None
 
 from views.dashboard_ui import DashboardWindow
 from views.pos_ui import POSWindow
 from views.inventory_ui import InventoryWindow
 from views.clients_ui import ClientsWindow
 from views.reports_ui import ReportsWindow
+from views.vendors_ui import VendorsWindow
 
 class MainWindow(QMainWindow):
     def __init__(self, user_data):
@@ -23,92 +21,62 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(f"ERP Supermercado JPV - {self.user_data[1].upper()}")
         self.resize(1280, 800)
         self.setStyleSheet(APP_STYLE)
-
-        # Main Layout (Horizontal: Sidebar | Content)
         central_widget = QWidget()
         central_widget.setObjectName("MainContent")
         self.setCentralWidget(central_widget)
         main_layout = QHBoxLayout(central_widget)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
-
-        # --- Sidebar ---
         self.sidebar = QFrame()
         self.sidebar.setObjectName("Sidebar")
-        self.sidebar.setFixedWidth(250)
-        sidebar_layout = QVBoxLayout(self.sidebar)
-        sidebar_layout.setContentsMargins(0, 0, 0, 0)
-        sidebar_layout.setSpacing(0)
-
-        # Logo / Title
-        app_title = QLabel("SUPERMERCADO\nJPV")
-        app_title.setObjectName("SidebarTitle")
-        app_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        sidebar_layout.addWidget(app_title)
-
-        # Navigation Buttons
-        self.btn_dashboard = self.create_nav_btn("Dashboard", "fa.dashboard", 0)
-        self.btn_pos = self.create_nav_btn("Punto de Venta", "fa.shopping-cart", 1)
-        self.btn_inventory = self.create_nav_btn("Inventario", "fa.cubes", 2)
-        self.btn_clients = self.create_nav_btn("Clientes", "fa.users", 3)
-        self.btn_reports = self.create_nav_btn("Reportes", "fa.file-pdf-o", 4)
-        
-        sidebar_layout.addWidget(self.btn_dashboard)
-        sidebar_layout.addWidget(self.btn_pos)
-        sidebar_layout.addWidget(self.btn_inventory)
-        sidebar_layout.addWidget(self.btn_clients)
-        sidebar_layout.addWidget(self.btn_reports)
-        
-        sidebar_layout.addStretch() 
-        
-        # User Info
-        user_info = QLabel(f"👤 {self.user_data[0]}")
-        user_info.setStyleSheet("color: #bdc3c7; padding: 20px; font-weight: bold;")
-        sidebar_layout.addWidget(user_info)
-
-        btn_exit = QPushButton("Cerrar Sesión")
-        btn_exit.setStyleSheet("background-color: #c0392b; color: white; border: none; padding: 15px;")
+        self.sidebar.setFixedWidth(260)
+        s_layout = QVBoxLayout(self.sidebar)
+        s_layout.setContentsMargins(0, 0, 0, 0)
+        s_layout.setSpacing(5)
+        title = QLabel("SUPERMERCADO
+JPV")
+        title.setObjectName("SidebarTitle")
+        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        s_layout.addWidget(title)
+        self.btns = []
+        self.add_menu_btn("Dashboard", "fa5s.tachometer-alt", 0, s_layout)
+        self.add_menu_btn("Punto de Venta", "fa5s.shopping-cart", 1, s_layout)
+        self.add_menu_btn("Inventario", "fa5s.boxes", 2, s_layout)
+        self.add_menu_btn("Clientes", "fa5s.users", 3, s_layout)
+        self.add_menu_btn("Vendedores", "fa5s.user-tie", 4, s_layout)
+        self.add_menu_btn("Reportes", "fa5s.file-invoice-dollar", 5, s_layout)
+        s_layout.addStretch()
+        user_info = QLabel(f"Hola, {self.user_data[0]}")
+        user_info.setStyleSheet("color: white; padding: 20px; font-weight: bold;")
+        s_layout.addWidget(user_info)
+        btn_exit = QPushButton("Salir")
+        btn_exit.setStyleSheet("background: #c82333; margin: 10px;")
         btn_exit.clicked.connect(self.close)
-        sidebar_layout.addWidget(btn_exit)
-
-        # --- Content Area ---
+        s_layout.addWidget(btn_exit)
         self.stack = QStackedWidget()
-        
-        # Initialize Views
-        self.view_dashboard = DashboardWindow()
-        self.view_pos = POSWindow(self.user_data)
-        self.view_inventory = InventoryWindow()
-        self.view_clients = ClientsWindow()
-        self.view_reports = ReportsWindow()
-
-        self.stack.addWidget(self.view_dashboard)
-        self.stack.addWidget(self.view_pos)
-        self.stack.addWidget(self.view_inventory)
-        self.stack.addWidget(self.view_clients)
-        self.stack.addWidget(self.view_reports)
-
-        # Add to Main Layout
+        self.stack.addWidget(DashboardWindow())
+        self.stack.addWidget(POSWindow(self.user_data))
+        self.stack.addWidget(InventoryWindow())
+        self.stack.addWidget(ClientsWindow())
+        self.stack.addWidget(VendorsWindow())
+        self.stack.addWidget(ReportsWindow())
         main_layout.addWidget(self.sidebar)
         main_layout.addWidget(self.stack)
 
-        # Set Dashboard as default
-        self.btn_dashboard.click()
-
-    def create_nav_btn(self, text, icon_name, index):
+    def add_menu_btn(self, text, icon, idx, layout):
         btn = QPushButton(f"  {text}")
         btn.setProperty("class", "SidebarBtn")
         btn.setCheckable(True)
-        if qta:
-            btn.setIcon(qta.icon(icon_name, color="#bdc3c7"))
+        if qta: btn.setIcon(qta.icon(icon, color="white"))
+        btn.clicked.connect(lambda: self.switch_tab(idx, btn))
+        layout.addWidget(btn)
+        self.btns.append(btn)
         
-        btn.clicked.connect(lambda: self.switch_page(index, btn))
-        return btn
-
-    def switch_page(self, index, btn_sender):
-        self.stack.setCurrentIndex(index)
-        
-        # Reset styles
-        for btn in [self.btn_dashboard, self.btn_pos, self.btn_inventory, self.btn_clients, self.btn_reports]:
-            btn.setChecked(False)
-        
-        btn_sender.setChecked(True)
+    def switch_tab(self, idx, active_btn):
+        if idx == 1 and self.user_data[1] != 'admin' and self.user_data[1] != 'vendedor':
+             from PyQt6.QtWidgets import QMessageBox
+             QMessageBox.warning(self, "Acceso Denegado", "No tienes permisos de Vendedor.")
+             return
+        self.stack.setCurrentIndex(idx)
+        for b in self.btns: b.setChecked(False)
+        active_btn.setChecked(True)
