@@ -1500,6 +1500,11 @@ GO
 SELECT ID_PRODUCTO, PRODUCTO, STOCK FROM PRODUCTO WHERE ID_PRODUCTO = 1;
 GO
 ```
+## 10. 🤝 Contribucion
+1. Fork el proyecto.
+2. Crear rama.
+
+*Generado el 2026-01-15*
 
 ---
 
@@ -1507,9 +1512,48 @@ GO
 
 ![Portada](imagenes_proyecto/portada_dashboard.png)
 
----
-## 10. 🤝 Contribucion
-1. Fork el proyecto.
-2. Crear rama.
+![Screenshot_734](imagenes_proyecto/Screenshot_734.png)
 
-*Generado el 2026-01-15*
+![Screenshot_735](imagenes_proyecto/Screenshot_735.png)
+
+![Screenshot_736](imagenes_proyecto/Screenshot_736.png)
+
+![Screenshot_737](imagenes_proyecto/Screenshot_737.png)
+
+![Screenshot_738](imagenes_proyecto/Screenshot_738.png)
+
+![Screenshot_739](imagenes_proyecto/Screenshot_739.png)
+
+![Screenshot_740](imagenes_proyecto/Screenshot_740.png)
+
+![Screenshot_741](imagenes_proyecto/Screenshot_741.png)
+
+![Screenshot_742](imagenes_proyecto/Screenshot_742.png)
+
+![Screenshot_743](imagenes_proyecto/Screenshot_743.png)
+
+![Screenshot_744](imagenes_proyecto/Screenshot_744.png)
+
+![Screenshot_745](imagenes_proyecto/Screenshot_745.png)
+
+![Screenshot_746](imagenes_proyecto/Screenshot_746.png)
+
+![Screenshot_747](imagenes_proyecto/Screenshot_747.png)
+
+![Screenshot_748](imagenes_proyecto/Screenshot_748.png)
+
+![Screenshot_749](imagenes_proyecto/Screenshot_749.png)
+
+![Screenshot_750](imagenes_proyecto/Screenshot_750.png)
+
+![Screenshot_751](imagenes_proyecto/Screenshot_751.png)
+
+![Screenshot_752](imagenes_proyecto/Screenshot_752.png)
+
+![Screenshot_753](imagenes_proyecto/Screenshot_753.png)
+
+![Screenshot_754](imagenes_proyecto/Screenshot_754.png)
+
+![Screenshot_755](imagenes_proyecto/Screenshot_755.png)
+
+---
