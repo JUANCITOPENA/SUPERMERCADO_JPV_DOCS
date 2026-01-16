@@ -6,7 +6,11 @@
 
 ---
 
+﻿# PORTADA DEL SISTEMA - DASHBOARD DINAMICO"
+
 ![Portada](imagenes_proyecto/portada_dashboard.png)
+
+---
 # MINI ERP SUPERMERCADO JPV - V7 (PYTHON EDITION)
 
 ## 📋 Estado del Proyecto
@@ -1496,6 +1500,12 @@ GO
 SELECT ID_PRODUCTO, PRODUCTO, STOCK FROM PRODUCTO WHERE ID_PRODUCTO = 1;
 GO
 ```
+
+---
+
+﻿# PORTADA DEL SISTEMA - DASHBOARD DINAMICO"
+
+![Portada](imagenes_proyecto/portada_dashboard.png)
 
 ---
 ## 10. 🤝 Contribucion
