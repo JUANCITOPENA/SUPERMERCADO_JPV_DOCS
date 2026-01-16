@@ -1,80 +1,52 @@
 from database import db
-import pyodbc
-
 class ProductController:
-    def get_all_products(self, search_term=""):
+    def get_all(self, search=""):
         conn = db.connect()
-        if not conn: return []
         cursor = conn.cursor()
-        query = "SELECT ID_PRODUCTO, PRODUCTO, STOCK, PRECIO_COMPRA, PRECIO_VENTA FROM PRODUCTO"
-        if search_term:
-            query += " WHERE PRODUCTO LIKE ?"
-            cursor.execute(query, (f"%{search_term}%",))
-        else:
-            cursor.execute(query)
+        # Added PRECIO_COMPRA at the end
+        sql = "SELECT P.ID_PRODUCTO, P.PRODUCTO, P.STOCK, P.PRECIO_VENTA, ISNULL(FP.foto_Productos_url, ''), P.PRECIO_COMPRA FROM PRODUCTO P LEFT JOIN FOTO_PRODUCTOS FP ON P.ID_PRODUCTO=FP.ID_PRODUCTO"
+        if search: sql += f" WHERE P.PRODUCTO LIKE '%{search}%' OR CAST(P.ID_PRODUCTO AS VARCHAR) LIKE '%{search}%'"
+        cursor.execute(sql)
+        res = cursor.fetchall()
+        conn.close()
+        return res
         
-        products = cursor.fetchall()
-        conn.close()
-        return products
-
-    def get_product_by_id(self, id):
+    def save(self, id_p, nom, stock, pc, pv, url):
         conn = db.connect()
-        if not conn: return None
-        cursor = conn.cursor()
-        cursor.execute("SELECT ID_PRODUCTO, PRODUCTO, STOCK, PRECIO_COMPRA, PRECIO_VENTA, GRAVADO_ITBIS FROM PRODUCTO WHERE ID_PRODUCTO = ?", (id,))
-        row = cursor.fetchone()
-        conn.close()
-        return row
-
-    def create_product(self, id_prod, name, stock, p_compra, p_venta, gravado=True):
-        conn = db.connect()
-        if not conn: return False, "No hay conexión"
         cursor = conn.cursor()
         try:
-            # Check if ID exists
-            cursor.execute("SELECT COUNT(*) FROM PRODUCTO WHERE ID_PRODUCTO = ?", (id_prod,))
-            if cursor.fetchone()[0] > 0:
-                return False, "El ID del producto ya existe."
-
-            sql = """
-            INSERT INTO PRODUCTO (ID_PRODUCTO, PRODUCTO, STOCK, PRECIO_COMPRA, PRECIO_VENTA, GRAVADO_ITBIS)
-            VALUES (?, ?, ?, ?, ?, ?)
-            """
-            cursor.execute(sql, (id_prod, name, stock, p_compra, p_venta, 1 if gravado else 0))
+            if id_p: # Update logic if ID exists? Or check existence
+                cursor.execute("SELECT COUNT(*) FROM PRODUCTO WHERE ID_PRODUCTO=?", (id_p,))
+                if cursor.fetchone()[0] > 0:
+                     cursor.execute("UPDATE PRODUCTO SET PRODUCTO=?, STOCK=?, PRECIO_COMPRA=?, PRECIO_VENTA=? WHERE ID_PRODUCTO=?", (nom, stock, pc, pv, id_p))
+                else:
+                     cursor.execute("INSERT INTO PRODUCTO (ID_PRODUCTO, PRODUCTO, STOCK, PRECIO_COMPRA, PRECIO_VENTA) VALUES (?,?,?,?,?)", (id_p, nom, stock, pc, pv))
+            else:
+                # Generate ID
+                cursor.execute("SELECT ISNULL(MAX(ID_PRODUCTO),0)+1 FROM PRODUCTO")
+                id_p = cursor.fetchone()[0]
+                cursor.execute("INSERT INTO PRODUCTO (ID_PRODUCTO, PRODUCTO, STOCK, PRECIO_COMPRA, PRECIO_VENTA) VALUES (?,?,?,?,?)", (id_p, nom, stock, pc, pv))
+            
+            # Photo
+            cursor.execute("DELETE FROM FOTO_PRODUCTOS WHERE ID_PRODUCTO=?", (id_p,))
+            if url: 
+                # ID_Foto logic? Just random or max + 1
+                cursor.execute("SELECT ISNULL(MAX(ID_Foto),0)+1 FROM FOTO_PRODUCTOS")
+                idf = cursor.fetchone()[0]
+                cursor.execute("INSERT INTO FOTO_PRODUCTOS (ID_Foto, foto_Productos_url, ID_PRODUCTO) VALUES (?,?,?)", (idf, url, id_p))
+            
             conn.commit()
-            return True, "Producto creado exitosamente."
-        except pyodbc.Error as e:
-            return False, str(e)
-        finally:
-            conn.close()
+            return True, "Guardado"
+        except Exception as e: return False, str(e)
+        finally: conn.close()
 
-    def update_product(self, id_prod, name, stock, p_compra, p_venta, gravado=True):
+    def delete(self, pid):
         conn = db.connect()
-        if not conn: return False, "No hay conexión"
         cursor = conn.cursor()
         try:
-            sql = """
-            UPDATE PRODUCTO SET PRODUCTO=?, STOCK=?, PRECIO_COMPRA=?, PRECIO_VENTA=?, GRAVADO_ITBIS=?
-            WHERE ID_PRODUCTO=?
-            """
-            cursor.execute(sql, (name, stock, p_compra, p_venta, 1 if gravado else 0, id_prod))
-            conn.commit()
-            return True, "Producto actualizado exitosamente."
-        except pyodbc.Error as e:
-            return False, str(e)
-        finally:
-            conn.close()
-
-    def delete_product(self, id_prod):
-        conn = db.connect()
-        if not conn: return False, "No hay conexión"
-        cursor = conn.cursor()
-        try:
-            # Check dependencies? The DB might have FKs but let's try
-            cursor.execute("DELETE FROM PRODUCTO WHERE ID_PRODUCTO = ?", (id_prod,))
-            conn.commit()
-            return True, "Producto eliminado."
-        except pyodbc.Error as e:
-            return False, f"Error al eliminar (posiblemente tiene ventas asociadas): {e}"
-        finally:
-            conn.close()
+             cursor.execute("DELETE FROM FOTO_PRODUCTOS WHERE ID_PRODUCTO=?", (pid,))
+             cursor.execute("DELETE FROM PRODUCTO WHERE ID_PRODUCTO=?", (pid,))
+             conn.commit()
+             return True, "Eliminado"
+        except Exception as e: return False, str(e)
+        finally: conn.close()

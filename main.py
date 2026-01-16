@@ -1,30 +1,24 @@
-import sys
-from PyQt6.QtWidgets import QApplication
-from views.login_ui import LoginWindow
-from views.main_window_ui import MainWindow
-import qdarktheme
+import customtkinter as ctk
+from views_ctk.login import LoginWindow
 
-def open_main_window(user_data):
-    # Esta función se llama cuando el login es exitoso
-    global window
-    window = MainWindow(user_data)
-    window.show()
+def main():
+    ctk.set_appearance_mode("Light")
+    ctk.set_default_color_theme("blue")
+    
+    # Store app instance globally or in a scope that survives
+    app = None
+
+    def start_app(user_data):
+        nonlocal app
+        print(f"Login Success: {user_data}")
+        
+        import views_ctk.main_window as mw
+        # Close login and open main
+        app = mw.MainWindow(user_data)
+        app.mainloop()
+
+    login = LoginWindow(start_app)
+    login.mainloop()
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    
-    # --- CORRECCIÓN COMPATIBILIDAD PYTHON 3.13 ---
-    try:
-        # Intenta cargar el tema con el método moderno (v2.x)
-        qdarktheme.setup_theme("auto")
-    except AttributeError:
-        # Si da error (como en tu caso con v0.1.7), usa el método antiguo
-        print("⚠️ Usando modo compatibilidad (Legacy Theme)")
-        app.setStyleSheet(qdarktheme.load_stylesheet())
-    # ---------------------------------------------
-
-    # Iniciar con Login
-    login = LoginWindow(open_main_window)
-    login.show()
-    
-    sys.exit(app.exec())
+    main()

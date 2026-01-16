@@ -1,76 +1,74 @@
 from database import db
-import pyodbc
 
 class ClientController:
-    def get_all_clients(self, search_term=""):
+    def get_all(self, search=""):
         conn = db.connect()
-        if not conn: return []
         cursor = conn.cursor()
-        query = """
-        SELECT c.ID_CLIENTE, c.NOMBRE_CLIENTE, c.APELLIDO_CLIENTE, c.RNC_CEDULA, c.TIPO_PERSONA, 
-               r.REGION, p.nombreProvincia
-        FROM CLIENTE c
-        JOIN REGION r ON c.id_region = r.ID_REGION
-        LEFT JOIN PROVINCIAS p ON c.id_provincia = p.id_provincia
+        sql = """
+            SELECT C.ID_CLIENTE, C.NOMBRE_CLIENTE, C.APELLIDO_CLIENTE, C.RNC_CEDULA, C.TIPO_PERSONA, 
+                   C.DIRECCION, C.TIENE_CREDITO_APROBADO, C.LIMITE_CREDITO,
+                   R.REGION, P.nombreProvincia, C.id_region, C.id_provincia
+            FROM CLIENTE C
+            LEFT JOIN REGION R ON C.id_region = R.ID_REGION
+            LEFT JOIN PROVINCIAS P ON C.id_provincia = P.id_provincia
         """
-        if search_term:
-            query += " WHERE c.NOMBRE_CLIENTE LIKE ? OR c.APELLIDO_CLIENTE LIKE ? OR c.RNC_CEDULA LIKE ?"
-            params = (f"%{search_term}%", f"%{search_term}%", f"%{search_term}%")
-            cursor.execute(query, params)
-        else:
-            cursor.execute(query)
+        if search:
+            sql += f" WHERE C.NOMBRE_CLIENTE LIKE '%{search}%' OR C.RNC_CEDULA LIKE '%{search}%' OR C.APELLIDO_CLIENTE LIKE '%{search}%'"
         
-        clients = cursor.fetchall()
+        cursor.execute(sql)
+        res = cursor.fetchall()
         conn.close()
-        return clients
+        return res
 
-    def create_client(self, nombre, apellido, rnc, tipo, region_id, prov_id, direccion, credito, limite):
-        conn = db.connect()
-        if not conn: return False, "No connection"
-        cursor = conn.cursor()
-        try:
-            # Using the stored procedure as requested
-            sql = """
-            EXEC SP_CREAR_CLIENTE 
-                @Nombre = ?, @Apellido = ?, @RNC_Cedula = ?, 
-                @TipoPersona = ?, @Region = ?, @Provincia = ?, 
-                @Direccion = ?, @TieneCredito = ?, @LimiteCredito = ?
-            """
-            cursor.execute(sql, (nombre, apellido, rnc, tipo, region_id, prov_id, direccion, credito, limite))
-            conn.commit()
-            return True, "Cliente creado exitosamente."
-        except pyodbc.Error as e:
-            return False, str(e)
-        finally:
-            conn.close()
-
-    def update_client(self, id_cliente, direccion, limite):
-        conn = db.connect()
-        if not conn: return False, "No connection"
-        cursor = conn.cursor()
-        try:
-            # Using the stored procedure as requested
-            sql = "EXEC SP_ACTUALIZAR_CLIENTE @ID_Cliente = ?, @Direccion = ?, @LimiteCredito = ?"
-            cursor.execute(sql, (id_cliente, direccion, limite))
-            conn.commit()
-            return True, "Cliente actualizado."
-        except pyodbc.Error as e:
-            return False, str(e)
-        finally:
-            conn.close()
-            
-    def get_regions(self):
+    def get_geo(self):
         conn = db.connect()
         cursor = conn.cursor()
         cursor.execute("SELECT ID_REGION, REGION FROM REGION")
-        data = cursor.fetchall()
+        regs = cursor.fetchall()
+        cursor.execute("SELECT id_provincia, nombreProvincia, id_region FROM PROVINCIAS")
+        provs = cursor.fetchall()
         conn.close()
-        return data
+        return regs, provs
 
-    def get_provinces_by_region(self, region_id):
+    def delete(self, client_id):
         conn = db.connect()
         cursor = conn.cursor()
-        cursor.execute("SELECT id_provincia, nombreProvincia FROM PROVINCIAS WHERE id_region = ?", (region_id,))
-        data = cursor.fetchall()
-        conn.close()
-        return data
+        try:
+            # Check for dependencies? The DB might have constraints.
+            cursor.execute("DELETE FROM CLIENTE WHERE ID_CLIENTE = ?", (client_id,))
+            conn.commit()
+            return True, "Cliente eliminado."
+        except Exception as e:
+            return False, f"Error al eliminar: {e}"
+        finally:
+            conn.close()
+
+    def save(self, id_c, nom, ape, rnc, tipo, region_id, prov_id, direccion, credito, limite):
+        conn = db.connect()
+        cursor = conn.cursor()
+        try:
+            if id_c: # Update
+                sql = """
+                    UPDATE CLIENTE SET 
+                    NOMBRE_CLIENTE=?, APELLIDO_CLIENTE=?, RNC_CEDULA=?, TIPO_PERSONA=?,
+                    id_region=?, id_provincia=?, DIRECCION=?, TIENE_CREDITO_APROBADO=?, LIMITE_CREDITO=?
+                    WHERE ID_CLIENTE=?
+                """
+                cursor.execute(sql, (nom, ape, rnc, tipo, region_id, prov_id, direccion, credito, limite, id_c))
+            else: # Insert
+                # Get max ID
+                cursor.execute("SELECT ISNULL(MAX(ID_CLIENTE),0) + 1 FROM CLIENTE")
+                new_id = cursor.fetchone()[0]
+                sql = """
+                    INSERT INTO CLIENTE (ID_CLIENTE, NOMBRE_CLIENTE, APELLIDO_CLIENTE, RNC_CEDULA, TIPO_PERSONA, 
+                                         id_region, id_provincia, DIRECCION, TIENE_CREDITO_APROBADO, LIMITE_CREDITO)
+                    VALUES (?,?,?,?,?,?,?,?,?,?)
+                """
+                cursor.execute(sql, (new_id, nom, ape, rnc, tipo, region_id, prov_id, direccion, credito, limite))
+            
+            conn.commit()
+            return True, "Cliente guardado."
+        except Exception as e:
+            return False, f"Error al guardar: {e}"
+        finally:
+            conn.close()

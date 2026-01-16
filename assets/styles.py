@@ -1,110 +1,106 @@
+# assets/styles.py
 APP_STYLE = """
-    /* GLOBAL SETTINGS - LIGHT THEME */
+    /* DISEÑO LUMINOSO DE ALTO CONTRASTE */
     QWidget {
-        font-family: 'Segoe UI', 'Arial', sans-serif;
+        font-family: 'Segoe UI', Arial;
         font-size: 14px;
-        color: #000000;
-        background-color: #ffffff;
+        color: #000000; /* Negro puro para texto */
+        background-color: #FFFFFF; /* Blanco puro para fondo */
     }
     
-    QMainWindow, QWidget#MainContent {
-        background-color: #f8f9fa;
+    QMainWindow, QStackedWidget {
+        background-color: #F0F2F5;
     }
-    
-    /* SIDEBAR (Classic Blue ERP Style) */
+
+    /* SIDEBAR AZUL PROFUNDO */
     QFrame#Sidebar {
-        background-color: #004085;
-        border-right: 2px solid #002752;
+        background-color: #002D62;
+        border-right: 2px solid #001A35;
     }
+    
     QLabel#SidebarTitle {
-        color: #ffffff;
+        color: #FFFFFF;
         font-size: 22px;
         font-weight: bold;
         padding: 20px;
-        background-color: #002752;
+        background-color: #001A35;
     }
-    
-    /* SIDEBAR BUTTONS */
+
     QPushButton.SidebarBtn {
         background-color: transparent;
-        color: #ffffff;
+        color: #E0E0E0;
         text-align: left;
         padding: 15px 20px;
         border: none;
-        font-size: 16px;
-        border-bottom: 1px solid #0056b3;
+        border-bottom: 1px solid #003D82;
+        font-weight: 500;
     }
+    
     QPushButton.SidebarBtn:hover {
-        background-color: #0056b3;
-        font-weight: bold;
-        padding-left: 25px;
+        background-color: #004A99;
+        color: #FFFFFF;
     }
+    
     QPushButton.SidebarBtn:checked {
-        background-color: #ffc107; /* Active Yellow */
+        background-color: #FFD700; /* Oro para resaltar selección */
         color: #000000;
         font-weight: bold;
     }
 
-    /* CARDS & PANELS */
-    QFrame, QGroupBox {
-        background-color: #ffffff;
-        border: 1px solid #dee2e6;
-        border-radius: 8px;
-    }
-    QLabel {
-        color: #212529;
-    }
-    QLabel.Header {
-        font-size: 24px;
+    /* FORMULARIOS Y GRIDS */
+    QGroupBox {
         font-weight: bold;
-        color: #004085;
-        margin-bottom: 15px;
+        border: 2px solid #002D62;
+        border-radius: 10px;
+        margin-top: 15px;
+        padding: 15px;
+        background-color: #FFFFFF;
     }
-    
-    /* INPUTS */
+
     QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox {
-        background-color: #ffffff;
-        border: 2px solid #ced4da;
-        border-radius: 4px;
-        padding: 8px;
-        color: #000000;
-    }
-    QLineEdit:focus, QComboBox:focus {
-        border: 2px solid #007bff;
-        background-color: #f0f8ff;
-    }
-    
-    /* BUTTONS */
-    QPushButton {
-        background-color: #007bff;
-        color: white;
-        border: none;
-        padding: 10px 20px;
+        border: 2px solid #ADB5BD;
         border-radius: 5px;
-        font-weight: bold;
-    }
-    QPushButton:hover {
-        background-color: #0056b3;
-    }
-    QPushButton#successBtn {
-        background-color: #28a745;
-    }
-    QPushButton#dangerBtn {
-        background-color: #dc3545;
-    }
-    
-    /* TABLES */
-    QTableWidget {
-        background-color: #ffffff;
-        gridline-color: #dee2e6;
+        padding: 10px;
         color: #000000;
-        selection-background-color: #007bff;
-        selection-color: #ffffff;
+        background-color: #FFFFFF;
     }
-    QHeaderView::section {
-        background-color: #343a40;
-        color: #ffffff;
-        padding: 8px;
+
+    QLineEdit:focus, QComboBox:focus {
+        border: 2px solid #007BFF;
+        background-color: #F8FBFF;
+    }
+
+    /* BOTONES ACCIÓN */
+    QPushButton {
+        background-color: #007BFF; /* Azul Vibrante */
+        color: #FFFFFF;
+        border-radius: 6px;
+        padding: 12px;
         font-weight: bold;
+    }
+
+    QPushButton:hover { background-color: #0056B3; }
+    
+    QPushButton#successBtn { background-color: #28A745; } /* Verde Éxito */
+    QPushButton#successBtn:hover { background-color: #218838; }
+    
+    QPushButton#dangerBtn { background-color: #DC3545; } /* Rojo Alerta */
+    QPushButton#dangerBtn:hover { background-color: #C82333; }
+
+    /* TABLAS */
+    QTableWidget {
+        background-color: #FFFFFF;
+        gridline-color: #DEE2E6;
+        selection-background-color: #CCE5FF;
+        selection-color: #000000;
+        border: 1px solid #DEE2E6;
+    }
+
+    QHeaderView::section {
+        background-color: #002D62;
+        color: #FFFFFF;
+        padding: 10px;
+        font-weight: bold;
+        border: 1px solid #FFFFFF;
     }
 """
