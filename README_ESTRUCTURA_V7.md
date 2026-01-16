@@ -11,6 +11,10 @@
     *   **KPIs en Tiempo Real:** Ingresos, Costos, Margen, Transacciones y Ticket Promedio.
     *   **Filtros Dinámicos:** Análisis por Año, Mes y Cliente específico.
     *   **Visualización:** Gráficos de tendencia (Matplotlib) y tablas de Top Productos estilizadas.
+*   **Configuración de Red Dinámica:**
+    *   Módulo de configuración para cambiar la IP del servidor (SQL Server) sin tocar el código.
+    *   Persistencia en `config.json`.
+    *   Acceso desde la pantalla de Login.
 *   **UX Mejorada:** Centrado automático de ventanas y navegación intuitiva.
 *   **Compatibilidad:** Eliminación de dependencias obsoletas (PyQt) en favor de nativas (CustomTkinter + Pillow).
 

@@ -2,6 +2,7 @@
 import customtkinter as ctk
 from src.views.styles import Colors, Fonts
 from src.controllers.auth_controller import AuthController
+from src.views.config_server import ConfigServerView
 from tkinter import messagebox
 
 class LoginWindow(ctk.CTk):
@@ -46,8 +47,17 @@ class LoginWindow(ctk.CTk):
                                        command=self.perform_login)
         self.btn_login.pack(pady=30, padx=20, fill="x")
         
+        # Config Button (Bottom Right)
+        self.btn_config = ctk.CTkButton(self.frame, text="⚙️ Configurar Servidor", fg_color="transparent", 
+                                        text_color="gray", hover_color=Colors.HOVER, width=100,
+                                        command=self.open_config)
+        self.btn_config.pack(side="bottom", pady=10)
+        
         # Bind Enter key
         self.bind('<Return>', lambda event: self.perform_login())
+
+    def open_config(self):
+        ConfigServerView(self)
 
     def perform_login(self):
         user = self.entry_user.get()
