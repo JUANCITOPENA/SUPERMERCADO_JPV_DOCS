@@ -6,6 +6,9 @@
 
 ---
 
+![Portada](imagenes_proyecto/portada_dashboard.png)
+
+
 ## 1. 🚩 Planteamiento del Problema
 La gestion manual o fragmentada de un supermercado conlleva errores en inventarios, lentitud en la facturacion y falta de visibilidad en las finanzas. **SUPERMERCADO_JPV_V6** nace de la necesidad de unificar todos los procesos de negocio (Ventas, Compras, Inventario, RRHH) en una unica fuente de verdad transaccional, robusta y escalable.
 
