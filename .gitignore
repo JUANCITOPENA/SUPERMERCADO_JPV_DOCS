@@ -1,0 +1,17 @@
+# Ignorar archivos PDF (Reportes, facturas, etc.)
+*.pdf
+*.PDF
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# Logs
+*.log
+
+# IDEs
+.vscode/
+.idea/
