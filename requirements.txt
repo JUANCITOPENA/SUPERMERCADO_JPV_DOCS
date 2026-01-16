@@ -1,8 +1,8 @@
-PyQt6
+customtkinter
+packaging
+Pillow
 pyodbc
-pyqtdarktheme
 reportlab
 xlsxwriter
 matplotlib
-qtawesome
 requests

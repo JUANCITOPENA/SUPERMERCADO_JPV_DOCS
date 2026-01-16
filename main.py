@@ -1,24 +1,10 @@
-import customtkinter as ctk
-from views_ctk.login import LoginWindow
+import sys
+import os
 
-def main():
-    ctk.set_appearance_mode("Light")
-    ctk.set_default_color_theme("blue")
-    
-    # Store app instance globally or in a scope that survives
-    app = None
+# Agregar el directorio actual al path para que Python encuentre el paquete 'src'
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-    def start_app(user_data):
-        nonlocal app
-        print(f"Login Success: {user_data}")
-        
-        import views_ctk.main_window as mw
-        # Close login and open main
-        app = mw.MainWindow(user_data)
-        app.mainloop()
-
-    login = LoginWindow(start_app)
-    login.mainloop()
+from src.main import main
 
 if __name__ == "__main__":
     main()
