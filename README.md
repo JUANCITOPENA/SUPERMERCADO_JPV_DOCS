@@ -58,6 +58,18 @@ python main.py
 pip install -r requirements.txt
 ```
 
+## 📦 Compilación y Ejecutables
+El proyecto cuenta con un script automatizado para generar el ejecutable (.exe) para Windows x64.
+
+1.  **Script de Build:** `build_exe_v6.py`
+2.  **Guía Detallada:** [README_BUILD.md](README_BUILD.md)
+3.  **Ejecución:**
+    ```powershell
+    python build_exe_v6.py
+    ```
+
+---
+
 ## 1. 🚩 Planteamiento del Problema
 La gestion manual o fragmentada de un supermercado conlleva errores en inventarios, lentitud en la facturacion y falta de visibilidad en las finanzas. **SUPERMERCADO_JPV_V6** nace de la necesidad de unificar todos los procesos de negocio (Ventas, Compras, Inventario, RRHH) en una unica fuente de verdad transaccional, robusta y escalable.
 
