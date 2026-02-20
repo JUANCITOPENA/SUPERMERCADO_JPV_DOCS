@@ -34,11 +34,11 @@ Este proyecto es una refactorización y mejora completa del sistema de gestión 
 - **Perfiles Individuales (PDF):** Fichas técnicas de productos y vendedores con **Foto en Grande**.
 - **Catálogos Visuales (PDF):** Listados con miniaturas de imágenes.
 - **Historial de Ventas:** Grid interactivo con filtros por fecha y cliente. Opción de **Reimprimir** (con marca de agua "COPIA") y **Anular Venta** (Retorno de Stock).
-- **KPIs Financieros:**
-    - Valoración de Inventario (Costo vs Venta).
-    - Análisis de Rentabilidad por Producto (Margen %).
-    - Desempeño de Vendedores (Ganancia Generada).
-
+    - **KPIs Financieros (Dashboard):**
+        - Valoración de Inventario (Costo vs Venta).
+        - Análisis de Rentabilidad por Producto (Margen %).
+        - Desempeño de Vendedores (Ganancia Generada).
+        - **Filtros Avanzados:** Filtrado independiente por Año y Mes dinámico (solo meses con datos reales).
 ## 🚀 Instrucciones de Ejecución
 
 1.  **Requisitos Previos:**

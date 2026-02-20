@@ -141,36 +141,42 @@ class DashboardView(ctk.CTkFrame):
         threading.Thread(target=self._refresh_filters_and_data, daemon=True).start()
 
     def _refresh_filters_and_data(self):
-        # 1. Update Filters Data
-        new_filter_data = self.controller.get_filters_data()
-        
-        # 2. Get current selection params
+        # 1. Get current selection params
         y = self.cb_year.get()
         m = self.cb_month.get()
         c_name = self.cb_client.get()
-        c_id = self.clients_map.get(c_name)
-
-        # 3. Update internal maps and lists (Main Thread safe update later)
+        
+        # 2. Update Filters Data (Dynamic months based on Year)
+        new_filter_data = self.controller.get_filters_data(y)
         self.filter_data = new_filter_data
         self.clients_map = {c['name']: c['id'] for c in self.filter_data['clients']}
+        
+        c_id = self.clients_map.get(c_name)
+        
         new_years = ["Todos"] + self.filter_data['years']
+        new_months = self.filter_data['months']
         new_clients = ["Todos"] + list(self.clients_map.keys())
 
-        # 4. Fetch Data
+        # 3. Fetch Metrics
         kpis = self.controller.get_kpis(y, m, c_id)
         chart_d, top_p = self.controller.get_charts_data(y, m, c_id)
         
-        self.after(0, lambda: self._update_ui_full(kpis, chart_d, top_p, new_years, new_clients))
+        self.after(0, lambda: self._update_ui_full(kpis, chart_d, top_p, new_years, new_months, new_clients))
 
-    def _update_ui_full(self, kpis, chart_data, top_products, new_years, new_clients):
+    def _update_ui_full(self, kpis, chart_data, top_products, new_years, new_months, new_clients):
         if not self.winfo_exists(): return
         
         # Update Combo Values silently maintaining selection if valid
         cur_y = self.cb_year.get()
+        cur_m = self.cb_month.get()
         cur_c = self.cb_client.get()
         
         self.cb_year.configure(values=new_years)
         if cur_y in new_years: self.cb_year.set(cur_y)
+        
+        self.cb_month.configure(values=new_months)
+        if cur_m in new_months: self.cb_month.set(cur_m)
+        else: self.cb_month.set("Todos")
         
         self.cb_client.configure(values=new_clients)
         if cur_c in new_clients: self.cb_client.set(cur_c)

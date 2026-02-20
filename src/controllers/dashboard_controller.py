@@ -3,9 +3,9 @@ from datetime import datetime
 import calendar
 
 class DashboardController:
-    def get_filters_data(self):
-        """Obtiene datos para poblar los filtros de la UI."""
-        data = {"years": [], "clients": []}
+    def get_filters_data(self, year=None):
+        """Obtiene datos para poblar los filtros de la UI (Años, Meses dinámicos y Clientes)."""
+        data = {"years": [], "months": ["Todos"], "clients": []}
         try:
             conn = db.connect()
             cursor = conn.cursor()
@@ -13,6 +13,16 @@ class DashboardController:
             # Años disponibles
             cursor.execute("SELECT DISTINCT YEAR(FECHA) FROM VENTAS ORDER BY YEAR(FECHA) DESC")
             data["years"] = [str(row[0]) for row in cursor.fetchall()]
+            
+            # Meses dinámicos según el año seleccionado
+            months_es = ["", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+            sql_months = "SELECT DISTINCT MONTH(FECHA) FROM VENTAS "
+            if year and year != "Todos":
+                sql_months += f"WHERE YEAR(FECHA) = {year} "
+            sql_months += "ORDER BY MONTH(FECHA) ASC"
+            
+            cursor.execute(sql_months)
+            data["months"] = ["Todos"] + [months_es[row[0]] for row in cursor.fetchall()]
             
             # Clientes (ID, Nombre) - Ordenados Alfabéticamente
             cursor.execute("SELECT ID_CLIENTE, CONCAT(NOMBRE_CLIENTE, ' ', APELLIDO_CLIENTE) FROM CLIENTE ORDER BY NOMBRE_CLIENTE ASC")
@@ -30,16 +40,12 @@ class DashboardController:
         if year and year != "Todos":
             clauses.append(f"YEAR(FECHA) = {year}")
             
-            if month and month != "Todos":
-                # Convertir nombre de mes a número
-                month_num = list(calendar.month_name).index(month) if month in calendar.month_name else None
-                # En español simple mapping si es necesario, asumiremos index standard
-                months_es = ["", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
-                if month in months_es:
-                    month_num = months_es.index(month)
-                
-                if month_num:
-                    clauses.append(f"MONTH(FECHA) = {month_num}")
+        if month and month != "Todos":
+            # Mapeo de meses en español
+            months_es = ["", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+            if month in months_es:
+                month_num = months_es.index(month)
+                clauses.append(f"MONTH(FECHA) = {month_num}")
         
         if client_id:
             clauses.append(f"ID_CLIENTE = {client_id}")

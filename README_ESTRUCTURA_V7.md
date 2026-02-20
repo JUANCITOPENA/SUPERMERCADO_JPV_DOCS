@@ -9,8 +9,11 @@
 *   **Arquitectura Profesional:** Código reestructurado en patrón MVC (`src/controllers`, `src/views`).
 *   **Dashboard Ejecutivo:**
     *   **KPIs en Tiempo Real:** Ingresos, Costos, Margen, Transacciones y Ticket Promedio.
-    *   **Filtros Dinámicos:** Análisis por Año, Mes y Cliente específico.
-    *   **Visualización:** Gráficos de tendencia (Matplotlib) y tablas de Top Productos estilizadas.
+    *   **Filtros Dinámicos e Independientes:**
+        *   Análisis por Año, Mes y Cliente específico.
+        *   **Filtro de Mes Dinámico:** La lista de meses se actualiza automáticamente consultando la base de datos (solo muestra meses con ventas).
+        *   **Independencia de Filtros:** Permite filtrar por un mes específico para "Todos" los años.
+    *   **Visualización:** Gráficos de tendencia (Matplotlib) y tablas de Top Productos estilizadas con persistencia de selección.
 *   **Configuración de Red Dinámica:**
     *   Módulo de configuración para cambiar la IP del servidor (SQL Server) sin tocar el código.
     *   Persistencia en `config.json`.
