@@ -638,3 +638,221 @@ class PrintEngine:
             return True, "Reporte PDF generado"
         except Exception as e:
             return False, str(e)
+
+    @staticmethod
+    def generate_client_comprehensive_report(title, info_dict, stats_dict, transactions, filename):
+        """Genera un reporte de cliente sin foto, con tabla de transacciones."""
+        doc = SimpleDocTemplate(filename, pagesize=letter)
+        elements = []
+        styles = getSampleStyleSheet()
+        
+        # Titulo
+        elements.append(Paragraph(title, styles['Title']))
+        elements.append(Paragraph(f"Fecha de Reporte: {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}", styles['Normal']))
+        elements.append(Spacer(1, 15))
+        
+        # 1. Informacion General (Sin imagen)
+        elements.append(Paragraph("<b>INFORMACIÓN DEL CLIENTE</b>", styles['Heading3']))
+        info_data = []
+        for k, v in info_dict.items():
+            info_data.append([f"{k}:", str(v)])
+            
+        t_info = Table(info_data, colWidths=[40*mm, 120*mm])
+        t_info.setStyle(TableStyle([
+            ('FONTNAME', (0,0), (0,-1), 'Helvetica-Bold'),
+            ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 5),
+        ]))
+        elements.append(t_info)
+        elements.append(Spacer(1, 15))
+        
+        # 2. Estadisticas
+        elements.append(Paragraph("<b>RESUMEN FINANCIERO</b>", styles['Heading3']))
+        stats_data = [[k, v] for k, v in stats_dict.items()]
+        t_stats = Table(stats_data, colWidths=[80*mm, 50*mm])
+        t_stats.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (0,-1), colors.lightgrey),
+            ('FONTNAME', (0,0), (0,-1), 'Helvetica-Bold'),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
+            ('ALIGN', (1,0), (1,-1), 'RIGHT'),
+        ]))
+        elements.append(t_stats)
+        elements.append(Spacer(1, 20))
+        
+        # 3. Tabla de Transacciones
+        elements.append(Paragraph("<b>HISTORIAL DE TRANSACCIONES Y ESTATUS</b>", styles['Heading3']))
+        headers = ["Tipo", "Documento / NCF", "Fecha", "Estado", "Monto RD$"]
+        table_data = [headers]
+        
+        for tx in transactions:
+            # tx: [Tipo, Documento, Fecha, Estado, Monto]
+            f_date = tx[2].strftime('%d/%m/%Y') if hasattr(tx[2], 'strftime') else str(tx[2])
+            row = [
+                tx[0],
+                tx[1],
+                f_date,
+                tx[3],
+                f"{tx[4]:,.2f}"
+            ]
+            table_data.append(row)
+            
+        t_tx = Table(table_data, colWidths=[35*mm, 50*mm, 30*mm, 35*mm, 35*mm], repeatRows=1)
+        t_tx.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.navy),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.whitesmoke),
+        ]))
+        
+        # Colorear montos negativos (Notas de Credito)
+        for i, tx in enumerate(transactions):
+            if tx[4] < 0:
+                t_tx.setStyle(TableStyle([('TEXTCOLOR', (-1, i+1), (-1, i+1), colors.red)]))
+
+        elements.append(t_tx)
+        
+        try:
+            doc.build(elements)
+            os.startfile(filename)
+            return True, "Reporte completo generado"
+        except Exception as e:
+            return False, str(e)
+
+    @staticmethod
+    def generate_inventory_analytical_report(title, data, columns, style_type, filename):
+        """Genera reportes analiticos de inventario (Valoracion, ABC, Auditoria)."""
+        doc = SimpleDocTemplate(filename, pagesize=letter)
+        elements = []
+        styles = getSampleStyleSheet()
+        
+        elements.append(Paragraph(title, styles['Title']))
+        elements.append(Paragraph(f"Generado: {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}", styles['Normal']))
+        elements.append(Spacer(1, 10*mm))
+        
+        # Preparar data con formatos
+        table_data = [columns]
+        for row in data:
+            fmt_row = []
+            for val in row:
+                if isinstance(val, (int, float)) and val > 1000: # Money/Large numbers
+                    fmt_row.append(f"{val:,.2f}")
+                elif hasattr(val, 'strftime'):
+                    fmt_row.append(val.strftime('%d/%m/%Y %H:%M'))
+                else:
+                    fmt_row.append(str(val))
+            table_data.append(fmt_row)
+            
+        # Determinar anchos de columna segun tipo
+        col_widths = None
+        if style_type == "VALORACION":
+            col_widths = [15*mm, 50*mm, 20*mm, 25*mm, 25*mm, 25*mm, 25*mm]
+        
+        t = Table(table_data, colWidths=col_widths, repeatRows=1)
+        
+        # Estilo base
+        t_style = [
+            ('BACKGROUND', (0, 0), (-1, 0), colors.navy),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('FONTSIZE', (0, 0), (-1, -1), 8),
+        ]
+        
+        # Resaltado para Clasificacion ABC
+        if style_type == "ABC":
+            for i, row in enumerate(data):
+                if "CLASE A" in str(row[-1]):
+                    t_style.append(('BACKGROUND', (-1, i+1), (-1, i+1), colors.lightgreen))
+                elif "CLASE C" in str(row[-1]):
+                    t_style.append(('TEXTCOLOR', (-1, i+1), (-1, i+1), colors.red))
+
+        t.setStyle(TableStyle(t_style))
+        elements.append(t)
+        
+        try:
+            doc.build(elements)
+            os.startfile(filename)
+            return True, "Reporte Analitico generado"
+        except Exception as e:
+            return False, str(e)
+
+    @staticmethod
+    def generate_vendor_comprehensive_report(title, info_dict, img_url, stats_dict, history, filename):
+        """Genera un reporte de vendedor con foto y tabla de historial de ventas."""
+        doc = SimpleDocTemplate(filename, pagesize=letter)
+        elements = []
+        styles = getSampleStyleSheet()
+        
+        # 1. Header & Image Section
+        elements.append(Paragraph(title, styles['Title']))
+        elements.append(Spacer(1, 10))
+        
+        img_path = PrintEngine._download_image_temp(img_url)
+        img_flowable = RLImage(img_path, width=45*mm, height=45*mm) if img_path else Paragraph("<b>[Sin Foto]</b>", styles['Normal'])
+        
+        info_text = []
+        for k, v in info_dict.items():
+            info_text.append([Paragraph(f"<b>{k}:</b>", styles['Normal']), Paragraph(str(v), styles['Normal'])])
+            
+        t_info = Table(info_text, colWidths=[35*mm, 85*mm])
+        t_info.setStyle(TableStyle([('VALIGN', (0,0), (-1,-1), 'TOP')]))
+        
+        # Combinar imagen e info en tabla maestra
+        t_master = Table([[img_flowable, t_info]], colWidths=[55*mm, 125*mm])
+        t_master.setStyle(TableStyle([
+            ('VALIGN', (0,0), (-1,-1), 'TOP'),
+            ('LEFTPADDING', (1,0), (1,0), 10),
+        ]))
+        elements.append(t_master)
+        elements.append(Spacer(1, 15))
+        
+        # 2. Stats Section
+        elements.append(Paragraph("<b>MÉTRICAS DE RENDIMIENTO</b>", styles['Heading3']))
+        stats_data = [[k, v] for k, v in stats_dict.items()]
+        t_stats = Table(stats_data, colWidths=[80*mm, 50*mm])
+        t_stats.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (0,-1), colors.whitesmoke),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
+            ('ALIGN', (1,0), (1,-1), 'RIGHT'),
+        ]))
+        elements.append(t_stats)
+        elements.append(Spacer(1, 20))
+        
+        # 3. Sales History Table
+        elements.append(Paragraph("<b>HISTORIAL DETALLADO DE VENTAS</b>", styles['Heading3']))
+        headers = ["Fecha", "NCF", "Cliente", "Producto", "Cant", "Monto"]
+        table_data = [headers]
+        
+        for row in history:
+            # row: [FECHA, NCF, Cliente, Producto, Cant, Monto, Estado]
+            f_date = row[0].strftime('%d/%m/%Y') if hasattr(row[0], 'strftime') else str(row[0])
+            table_data.append([
+                f_date,
+                row[1],
+                str(row[2])[:25],
+                str(row[3])[:25],
+                str(row[4]),
+                f"{row[5]:,.2f}"
+            ])
+            
+        t_hist = Table(table_data, colWidths=[25*mm, 35*mm, 40*mm, 40*mm, 15*mm, 30*mm], repeatRows=1)
+        t_hist.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.darkgreen),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('FONTSIZE', (0, 0), (-1, -1), 8),
+        ]))
+        elements.append(t_hist)
+        
+        try:
+            doc.build(elements)
+            os.startfile(filename)
+            return True, "Reporte de vendedor generado"
+        except Exception as e:
+            return False, str(e)

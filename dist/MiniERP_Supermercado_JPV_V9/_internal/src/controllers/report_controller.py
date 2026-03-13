@@ -306,24 +306,67 @@ class ReportController:
         conn.close()
         return [list(r) for r in rows]
 
-    def get_credit_notes_summary(self, since=None, until=None):
-        """Obtiene totales resumidos de notas de credito."""
+    def get_inventory_valuation_detailed(self):
+        """Reporte detallado de valor de inventario."""
         conn = db.connect()
         cursor = conn.cursor()
-        sql = "SELECT COUNT(*), SUM(TOTAL_DEVUELTO), SUM(ITBIS_DEVUELTO) FROM NOTA_CREDITO WHERE 1=1"
-        params = []
-        if since:
-            sql += " AND CAST(FECHA AS DATE) >= ?"
-            params.append(since)
-        if until:
-            sql += " AND CAST(FECHA AS DATE) <= ?"
-            params.append(until)
-            
-        cursor.execute(sql, params)
-        row = cursor.fetchone()
+        sql = """
+            SELECT 
+                ID_PRODUCTO, PRODUCTO, STOCK, PRECIO_COMPRA, PRECIO_VENTA,
+                (STOCK * PRECIO_COMPRA) as Valor_Costo,
+                (STOCK * PRECIO_VENTA) as Valor_Venta,
+                ((PRECIO_VENTA - PRECIO_COMPRA) * STOCK) as Margen_Potencial
+            FROM PRODUCTO
+            ORDER BY Valor_Costo DESC
+        """
+        cursor.execute(sql)
+        res = [list(row) for row in cursor.fetchall()]
         conn.close()
-        return {
-            "cantidad": row[0] or 0,
-            "total": float(row[1]) if row[1] else 0.0,
-            "itbis": float(row[2]) if row[2] else 0.0
-        }
+        return res
+
+    def get_inventory_rotation_analytics(self):
+        """Analisis de Rotacion ABC: Clasifica productos por movimiento."""
+        conn = db.connect()
+        cursor = conn.cursor()
+        sql = """
+            SELECT 
+                P.PRODUCTO,
+                P.STOCK as Stock_Actual,
+                ISNULL(SUM(DV.CANTIDAD), 0) as Unidades_Vendidas,
+                CASE 
+                    WHEN ISNULL(SUM(DV.CANTIDAD), 0) >= 100 THEN 'CLASE A (Alta Rotacion)'
+                    WHEN ISNULL(SUM(DV.CANTIDAD), 0) >= 30 THEN 'CLASE B (Media)'
+                    ELSE 'CLASE C (Baja/Muerto)'
+                END as Clasificacion_ABC
+            FROM PRODUCTO P
+            LEFT JOIN DETALLE_VENTAS DV ON P.ID_PRODUCTO = DV.ID_PRODUCTO
+            GROUP BY P.ID_PRODUCTO, P.PRODUCTO, P.STOCK
+            ORDER BY Unidades_Vendidas DESC
+        """
+        cursor.execute(sql)
+        res = [list(row) for row in cursor.fetchall()]
+        conn.close()
+        return res
+
+    def get_inventory_movements_audit(self, since, until):
+        """Auditoria tecnica de movimientos de stock via XML."""
+        conn = db.connect()
+        cursor = conn.cursor()
+        sql = """
+            SELECT 
+                FECHA,
+                USUARIO_DB,
+                ACCION,
+                DATOS_NUEVOS.value('(/inserted/@PRODUCTO)[1]', 'VARCHAR(100)') as Producto,
+                DATOS_ANTERIORES.value('(/deleted/@STOCK)[1]', 'INT') as Stock_Anterior,
+                DATOS_NUEVOS.value('(/inserted/@STOCK)[1]', 'INT') as Stock_Nuevo,
+                (DATOS_NUEVOS.value('(/inserted/@STOCK)[1]', 'INT') - ISNULL(DATOS_ANTERIORES.value('(/deleted/@STOCK)[1]', 'INT'), 0)) as Diferencia
+            FROM TABLA_AUDITORIA
+            WHERE TABLA_AFECTADA = 'PRODUCTO'
+              AND CAST(FECHA AS DATE) BETWEEN ? AND ?
+            ORDER BY FECHA DESC
+        """
+        cursor.execute(sql, (since, until))
+        res = [list(row) for row in cursor.fetchall()]
+        conn.close()
+        return res

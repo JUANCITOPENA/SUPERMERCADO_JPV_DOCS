@@ -123,7 +123,9 @@ class NewCreditNoteWindow(ctk.CTkToplevel):
         self.controller = CreditNoteController()
         
         self.title("EMISIÓN DE NOTA DE CRÉDITO PROFESIONAL")
-        self.geometry("1150x850")
+        
+        # Iniciar maximizada para ver todo el formulario
+        self.state('zoomed')
         self.configure(fg_color=Colors.BACKGROUND)
         self.grab_set() 
         
