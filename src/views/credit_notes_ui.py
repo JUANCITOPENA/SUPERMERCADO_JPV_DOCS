@@ -51,7 +51,7 @@ class CreditNotesView(ctk.CTkFrame):
         self.cal_until = DateEntry(date_sub, width=12, background='darkblue', foreground='white', borderwidth=2, date_pattern='yyyy-mm-dd')
         self.cal_until.pack(side="left", padx=5)
 
-        # 3. Filter Button (Explicitly visible)
+        # 3. Filter Button
         self.btn_filter = ctk.CTkButton(filter_frm, text="🔍 APLICAR FILTROS", width=150, height=35,
                                        fg_color=Colors.PRIMARY, command=self.refresh_main_grid)
         self.btn_filter.pack(side="left", padx=20)
@@ -85,23 +85,15 @@ class CreditNotesView(ctk.CTkFrame):
 
     def refresh_main_grid(self):
         try:
-            # Limpiar
             for i in self.tree.get_children(): self.tree.delete(i)
-            
             criteria = self.ent_search.get()
-            since = self.cal_since.get()
-            until = self.cal_until.get()
+            since = self.cal_since.get_date().strftime('%Y-%m-%d')
+            until = self.cal_until.get_date().strftime('%Y-%m-%d')
             
             data = self.controller.list_credit_notes(criteria, since, until)
-            
-            if not data:
-                print("No se encontraron notas de credito con los filtros actuales.")
-                return
-
             for r in data:
                 f_val = r['fecha']
                 f_str = f_val.strftime("%Y-%m-%d %H:%M") if hasattr(f_val, 'strftime') else str(f_val)
-                
                 self.tree.insert("", "end", iid=r['id'], values=(
                     r['id'], r['ncf'], r['ref'], r['cliente'], 
                     f_str, r['motivo'], f"${r['total']:,.2f}"
@@ -114,7 +106,6 @@ class CreditNotesView(ctk.CTkFrame):
         sel = self.tree.selection()
         if not sel: return
         id_nc = int(sel[0])
-        
         nc_info, items = self.controller.get_nc_full_details(id_nc)
         if nc_info:
             PrintEngine.generate_credit_note(nc_info, items)
@@ -132,12 +123,14 @@ class NewCreditNoteWindow(ctk.CTkToplevel):
         self.controller = CreditNoteController()
         
         self.title("EMISIÓN DE NOTA DE CRÉDITO PROFESIONAL")
-        self.geometry("1100x850")
+        
+        # Iniciar maximizada para ver todo el formulario
+        self.state('zoomed')
         self.configure(fg_color=Colors.BACKGROUND)
         self.grab_set() 
         
         self.invoice_data = None
-        self.nc_type = ctk.StringVar(value="PARCIAL") # "TOTAL" o "PARCIAL"
+        self.nc_mode = ctk.StringVar(value="PARCIAL") # "TOTAL" o "PARCIAL"
         
         self.init_ui()
 
@@ -146,8 +139,8 @@ class NewCreditNoteWindow(ctk.CTkToplevel):
         step1 = ctk.CTkFrame(self, fg_color=Colors.PANEL)
         step1.pack(fill="x", padx=20, pady=10)
         
-        ctk.CTkLabel(step1, text="1. BUSCAR FACTURA ORIGINAL (NCF o Cliente):", font=Fonts.SUBTITLE).pack(side="left", padx=15, pady=15)
-        self.ent_inv_search = ctk.CTkEntry(step1, width=400, placeholder_text="Escriba NCF o nombre del cliente...")
+        ctk.CTkLabel(step1, text="1. BUSCAR FACTURA ORIGINAL:", font=Fonts.SUBTITLE).pack(side="left", padx=15, pady=15)
+        self.ent_inv_search = ctk.CTkEntry(step1, width=400, placeholder_text="NCF, ID Cliente o Nombre...")
         self.ent_inv_search.pack(side="left", padx=10)
         self.ent_inv_search.bind("<Return>", lambda e: self.search_invoice())
         
@@ -161,54 +154,60 @@ class NewCreditNoteWindow(ctk.CTkToplevel):
         self.inv_tree.pack(fill="x", padx=20, pady=5)
         self.inv_tree.bind("<Double-1>", lambda e: self.load_invoice_details())
 
-        # --- OPCIONES DE NOTA DE CREDITO ---
-        self.mode_frm = ctk.CTkFrame(self, fg_color="transparent")
+        # --- TIPO DE OPERACION (Muy Visible) ---
+        self.mode_frm = ctk.CTkFrame(self, fg_color=Colors.PANEL, border_width=2, border_color=Colors.PRIMARY)
         self.mode_frm.pack(fill="x", padx=20, pady=10)
-        self.mode_frm.pack_forget() # Oculto hasta elegir factura
+        # Se oculta inicialmente, se muestra al cargar factura
+        self.mode_frm.pack_forget()
 
-        ctk.CTkLabel(self.mode_frm, text="TIPO DE NOTA DE CRÉDITO:", font=Fonts.BODY).pack(side="left", padx=10)
+        ctk.CTkLabel(self.mode_frm, text="TIPO DE NOTA DE CRÉDITO A APLICAR:", font=Fonts.SUBTITLE, text_color=Colors.PRIMARY).pack(side="left", padx=20, pady=15)
         
-        self.rb_total = ctk.CTkRadioButton(self.mode_frm, text="ANULACIÓN TOTAL (Cancela todo)", 
-                                          variable=self.nc_type, value="TOTAL", command=self.on_mode_change)
+        self.rb_total = ctk.CTkRadioButton(self.mode_frm, text="ANULACIÓN TOTAL (Cancela todo el saldo)", 
+                                          variable=self.nc_mode, value="TOTAL", font=Fonts.BODY, command=self.on_mode_change)
         self.rb_total.pack(side="left", padx=30)
         
-        self.rb_partial = ctk.CTkRadioButton(self.mode_frm, text="DEVOLUCIÓN PARCIAL (Elegir productos)", 
-                                            variable=self.nc_type, value="PARCIAL", command=self.on_mode_change)
+        self.rb_partial = ctk.CTkRadioButton(self.mode_frm, text="DEVOLUCIÓN PARCIAL (Elegir por producto)", 
+                                            variable=self.nc_mode, value="PARCIAL", font=Fonts.BODY, command=self.on_mode_change)
         self.rb_partial.pack(side="left", padx=30)
 
-        # --- PASO 2: DETALLE DE PRODUCTOS ---
+        # --- PASO 2: DETALLES ---
         self.details_frm = ctk.CTkFrame(self, fg_color=Colors.PANEL)
         self.details_frm.pack(fill="both", expand=True, padx=20, pady=10)
         
-        self.lbl_step2 = ctk.CTkLabel(self.details_frm, text="2. DETALLES DE LA OPERACIÓN:", font=Fonts.SUBTITLE)
+        self.lbl_step2 = ctk.CTkLabel(self.details_frm, text="2. SALDO DISPONIBLE POR PRODUCTO:", font=Fonts.SUBTITLE)
         self.lbl_step2.pack(anchor="w", padx=15, pady=5)
         
-        self.items_tree = ttk.Treeview(self.details_frm, columns=("ID", "Producto", "Vendidas", "Devolver", "Precio", "Subtotal"), show="headings")
-        for c in ("ID", "Producto", "Vendidas", "Devolver", "Precio", "Subtotal"):
+        # Columns: ID, Producto, Original, Ya Devuelto, Disponible, A Devolver, Subtotal
+        self.cols_items = ("ID", "Producto", "Facturado", "Previo Dev.", "Disponible", "Devolver Ahora", "Subtotal RD$")
+        self.items_tree = ttk.Treeview(self.details_frm, columns=self.cols_items, show="headings")
+        for c in self.cols_items:
             self.items_tree.heading(c, text=c)
-            self.items_tree.column(c, width=130, anchor="center")
+            self.items_tree.column(c, width=110, anchor="center")
         
-        self.items_tree.column("Producto", width=300, anchor="w")
+        self.items_tree.column("Producto", width=250, anchor="w")
         self.items_tree.pack(fill="both", expand=True, padx=15, pady=5)
         self.items_tree.bind("<Double-1>", self.on_item_double_click)
 
-        # --- PASO 3: MOTIVO Y CIERRE ---
+        # --- PASO 3: CIERRE ---
         bottom = ctk.CTkFrame(self, fg_color=Colors.PANEL)
         bottom.pack(fill="x", padx=20, pady=15)
         
-        self.lbl_total_refund = ctk.CTkLabel(bottom, text="TOTAL A DEVOLVER: RD$ 0.00", font=("Arial", 24, "bold"), text_color=Colors.SUCCESS)
-        self.lbl_total_refund.pack(side="left", padx=20, pady=15)
+        self.lbl_total_nc = ctk.CTkLabel(bottom, text="TOTAL NC: RD$ 0.00", font=("Arial", 24, "bold"), text_color=Colors.SUCCESS)
+        self.lbl_total_nc.pack(side="left", padx=20, pady=15)
         
-        self.ent_reason = ctk.CTkEntry(bottom, placeholder_text="Escriba el motivo de la NC aqui...", width=400, height=40)
+        self.ent_reason = ctk.CTkEntry(bottom, placeholder_text="Escriba el motivo legal de la Nota de Credito aqui...", width=400, height=40)
         self.ent_reason.pack(side="left", padx=20)
         
-        self.btn_save = ctk.CTkButton(bottom, text="✅ PROCESAR Y GENERAR PDF", fg_color=Colors.SUCCESS, 
-                                     height=55, width=200, font=Fonts.BUTTON, state="disabled", command=self.process_final)
+        self.btn_save = ctk.CTkButton(bottom, text="✅ APLICAR Y GENERAR PDF", fg_color=Colors.SUCCESS, 
+                                     height=55, width=220, font=Fonts.BUTTON, state="disabled", command=self.process_final)
         self.btn_save.pack(side="right", padx=20)
 
     def search_invoice(self):
         for i in self.inv_tree.get_children(): self.inv_tree.delete(i)
         res = self.controller.search_invoices(self.ent_inv_search.get())
+        if not res:
+            messagebox.showinfo("Búsqueda", "No se encontraron facturas pendientes o con saldo disponible.")
+            return
         for r in res:
             self.inv_tree.insert("", "end", iid=r['id_venta'], values=(
                 r['id_venta'], r['ncf'], r['cliente'], f"${r['total']:,.2f}", 
@@ -222,29 +221,34 @@ class NewCreditNoteWindow(ctk.CTkToplevel):
         id_v = int(sel[0])
         data, err = self.controller.get_invoice_details(id_v)
         if err:
-            messagebox.showerror("Error", err)
+            messagebox.showerror("Error de Carga", f"No se pudieron cargar los detalles:\n{err}")
             return
         
+        if not data['items']:
+            messagebox.showwarning("Aviso", "Esta factura ya no tiene artículos con saldo disponible para devolver.")
+            return
+
         self.invoice_data = data
-        self.mode_frm.pack(fill="x", padx=20, pady=10)
-        self.nc_type.set("PARCIAL") # Default
+        # Mostrar el panel de opciones ahora que hay data
+        self.mode_frm.pack(fill="x", padx=20, pady=10, before=self.details_frm)
+        self.nc_mode.set("PARCIAL") # Por defecto parcial para seguridad
         self.btn_save.configure(state="normal")
         self.on_mode_change()
 
     def on_mode_change(self):
         if not self.invoice_data: return
         
-        mode = self.nc_type.get()
+        mode = self.nc_mode.get()
         if mode == "TOTAL":
-            # Autocompletar todo
+            # Autocompletar con todo lo DISPONIBLE (no original, para soportar cierres de facturas ya devueltas parcialmente)
             for it in self.invoice_data['items']:
-                it['qty_refund'] = it['cantidad_original']
-            self.lbl_step2.configure(text="2. MODO ANULACIÓN TOTAL (Se devolverán todos los artículos)")
+                it['qty_refund'] = it['disponible']
+            self.lbl_step2.configure(text="2. MODO ANULACIÓN TOTAL (Se devolverá todo el SALDO RESTANTE)")
         else:
             # Resetear a cero para que elijan
             for it in self.invoice_data['items']:
                 it['qty_refund'] = 0
-            self.lbl_step2.configure(text="2. MODO DEVOLUCIÓN PARCIAL (Doble clic en 'Devolver' para editar)")
+            self.lbl_step2.configure(text="2. MODO DEVOLUCIÓN PARCIAL (Doble clic en 'Devolver Ahora' para editar)")
         
         self.refresh_items_grid()
 
@@ -256,13 +260,13 @@ class NewCreditNoteWindow(ctk.CTkToplevel):
             total_nc += sub
             self.items_tree.insert("", "end", iid=it['id_producto'], values=(
                 it['id_producto'], it['producto'], it['cantidad_original'], 
-                it['qty_refund'], f"${it['precio']:,.2f}", f"${sub:,.2f}"
+                it['ya_devuelto'], it['disponible'], it['qty_refund'], f"${sub:,.2f}"
             ))
-        self.lbl_total_refund.configure(text=f"TOTAL A DEVOLVER: RD$ {total_nc:,.2f}")
+        self.lbl_total_nc.configure(text=f"TOTAL NC: RD$ {total_nc:,.2f}")
 
     def on_item_double_click(self, e):
-        if self.nc_type.get() == "TOTAL":
-            messagebox.showinfo("Modo Total", "En este modo no puede editar cantidades individuales.")
+        if self.nc_mode.get() == "TOTAL":
+            messagebox.showinfo("Modo Total", "En modo de Anulación Total no se pueden editar cantidades individuales.")
             return
             
         sel = self.items_tree.selection()
@@ -270,15 +274,15 @@ class NewCreditNoteWindow(ctk.CTkToplevel):
         pid = int(sel[0])
         it = next(x for x in self.invoice_data['items'] if x['id_producto'] == pid)
         
-        dialog = ctk.CTkInputDialog(text=f"¿Cuantos '{it['producto']}' desea devolver?\n(Máximo disponible: {it['cantidad_original']})", title="Editar Cantidad")
+        dialog = ctk.CTkInputDialog(text=f"¿Cuantos '{it['producto']}' desea devolver?\n(Saldo disponible: {it['disponible']})", title="Editar Cantidad")
         val = dialog.get_input()
         if val and val.isdigit():
             q = int(val)
-            if 0 <= q <= it['cantidad_original']:
+            if 0 <= q <= it['disponible']:
                 it['qty_refund'] = q
                 self.refresh_items_grid()
             else:
-                messagebox.showwarning("Invalido", "La cantidad excede el limite de la factura.")
+                messagebox.showwarning("Cantidad Excedida", f"Solo hay {it['disponible']} unidades disponibles en esta factura.")
 
     def process_final(self):
         reason = self.ent_reason.get().strip()
@@ -288,13 +292,13 @@ class NewCreditNoteWindow(ctk.CTkToplevel):
             
         total_nc = sum(x['qty_refund'] * x['precio'] for x in self.invoice_data['items'])
         if total_nc <= 0:
-            messagebox.showwarning("Atención", "No se han seleccionado productos para devolver.")
+            messagebox.showwarning("Monto Inválido", "No se han seleccionado productos para devolver.")
             return
 
-        is_full = (self.nc_type.get() == "TOTAL")
-        msg = "¿Está seguro de ANULAR COMPLETAMENTE esta factura?" if is_full else f"¿Procesar devolución por un total de RD$ {total_nc:,.2f}?"
+        is_full = (self.nc_mode.get() == "TOTAL")
+        msg = "¿Está seguro de ANULAR COMPLETAMENTE el saldo de esta factura?" if is_full else f"¿Procesar devolución parcial por un total de RD$ {total_nc:,.2f}?"
         
-        if messagebox.askyesno("Confirmar", msg):
+        if messagebox.askyesno("Confirmar Operación", msg):
             payload = {
                 "id_venta": self.invoice_data['id_venta'],
                 "total_venta": self.invoice_data['total'],
@@ -312,7 +316,7 @@ class NewCreditNoteWindow(ctk.CTkToplevel):
                 if nc_info:
                     PrintEngine.generate_credit_note(nc_info, items)
                 
-                self.callback() # Refrescar grid principal
+                self.callback() # Refrescar grid del historial
                 self.destroy() # Cerrar ventana
             else:
-                messagebox.showerror("Error", msg_res)
+                messagebox.showerror("Error de Procesamiento", msg_res)

@@ -267,3 +267,63 @@ class ReportController:
             "transactions": processed_txns,
             "final_balance": running_balance
         }
+
+    def get_credit_notes_report_data(self, criteria=None, since=None, until=None):
+        """Obtiene datos detallados de notas de credito para reportes."""
+        conn = db.connect()
+        cursor = conn.cursor()
+        sql = """
+            SELECT 
+                N.ID_NOTA, 
+                N.NCF_NOTA_CREDITO, 
+                N.NCF_FACTURA_ORIGINAL, 
+                CONCAT(C.NOMBRE_CLIENTE, ' ', C.APELLIDO_CLIENTE) AS Cliente,
+                N.FECHA, 
+                N.MOTIVO, 
+                N.TIPO_DEVOLUCION, 
+                N.TOTAL_DEVUELTO, 
+                N.ITBIS_DEVUELTO
+            FROM NOTA_CREDITO N
+            JOIN VENTAS V ON N.ID_VENTA = V.ID_VENTA
+            JOIN CLIENTE C ON V.ID_CLIENTE = C.ID_CLIENTE
+            WHERE 1=1
+        """
+        params = []
+        if criteria:
+            sql += " AND (N.NCF_NOTA_CREDITO LIKE ? OR N.NCF_FACTURA_ORIGINAL LIKE ? OR C.NOMBRE_CLIENTE LIKE ?)"
+            p = f"%{criteria}%"
+            params.extend([p, p, p])
+        if since:
+            sql += " AND CAST(N.FECHA AS DATE) >= ?"
+            params.append(since)
+        if until:
+            sql += " AND CAST(N.FECHA AS DATE) <= ?"
+            params.append(until)
+            
+        sql += " ORDER BY N.FECHA DESC"
+        cursor.execute(sql, params)
+        rows = cursor.fetchall()
+        conn.close()
+        return [list(r) for r in rows]
+
+    def get_credit_notes_summary(self, since=None, until=None):
+        """Obtiene totales resumidos de notas de credito."""
+        conn = db.connect()
+        cursor = conn.cursor()
+        sql = "SELECT COUNT(*), SUM(TOTAL_DEVUELTO), SUM(ITBIS_DEVUELTO) FROM NOTA_CREDITO WHERE 1=1"
+        params = []
+        if since:
+            sql += " AND CAST(FECHA AS DATE) >= ?"
+            params.append(since)
+        if until:
+            sql += " AND CAST(FECHA AS DATE) <= ?"
+            params.append(until)
+            
+        cursor.execute(sql, params)
+        row = cursor.fetchone()
+        conn.close()
+        return {
+            "cantidad": row[0] or 0,
+            "total": float(row[1]) if row[1] else 0.0,
+            "itbis": float(row[2]) if row[2] else 0.0
+        }

@@ -584,3 +584,57 @@ class PrintEngine:
             return True, "Nota de Credito impresa"
         except Exception as e:
             return False, str(e)
+
+    @staticmethod
+    def generate_credit_notes_general_report(title, data, columns, summary, date_narrative, filename="reporte_nc.pdf"):
+        """Genera un reporte PDF tabulado de multiples Notas de Credito."""
+        doc = SimpleDocTemplate(filename, pagesize=letter)
+        elements = []
+        styles = getSampleStyleSheet()
+        
+        # Titulo
+        elements.append(Paragraph(title, styles['Title']))
+        elements.append(Paragraph(date_narrative, styles['Normal']))
+        elements.append(Spacer(1, 10*mm))
+        
+        # Tabla
+        table_data = [columns]
+        for row in data:
+            # Format numbers and dates
+            fmt_row = []
+            for i, val in enumerate(row):
+                if isinstance(val, (int, float)) and i >= 7: # total and itbis
+                    fmt_row.append(f"${val:,.2f}")
+                elif hasattr(val, 'strftime'):
+                    fmt_row.append(val.strftime('%d/%m/%Y'))
+                else:
+                    fmt_row.append(str(val))
+            table_data.append(fmt_row)
+            
+        t = Table(table_data, repeatRows=1)
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.darkred),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('FONTSIZE', (0, 0), (-1, -1), 8),
+        ]))
+        elements.append(t)
+        elements.append(Spacer(1, 10*mm))
+        
+        # Resumen
+        elements.append(Paragraph("<b>RESUMEN DEL PERIODO</b>", styles['Heading3']))
+        res_text = f"Cantidad de Notas: {summary['cantidad']}<br/>"
+        res_text += f"Monto Total Devuelto: RD$ {summary['total']:,.2f}<br/>"
+        res_text += f"ITBIS Total Afectado: RD$ {summary['itbis']:,.2f}"
+        elements.append(Paragraph(res_text, styles['Normal']))
+        
+        try:
+            doc.build(elements)
+            os.startfile(filename)
+            return True, "Reporte PDF generado"
+        except Exception as e:
+            return False, str(e)
