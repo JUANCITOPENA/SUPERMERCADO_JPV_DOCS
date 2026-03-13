@@ -781,78 +781,88 @@ class PrintEngine:
             return False, str(e)
 
     @staticmethod
-    def generate_vendor_comprehensive_report(title, info_dict, img_url, stats_dict, history, filename):
-        """Genera un reporte de vendedor con foto y tabla de historial de ventas."""
-        doc = SimpleDocTemplate(filename, pagesize=letter)
-        elements = []
-        styles = getSampleStyleSheet()
-        
-        # 1. Header & Image Section
-        elements.append(Paragraph(title, styles['Title']))
-        elements.append(Spacer(1, 10))
-        
-        img_path = PrintEngine._download_image_temp(img_url)
-        img_flowable = RLImage(img_path, width=45*mm, height=45*mm) if img_path else Paragraph("<b>[Sin Foto]</b>", styles['Normal'])
-        
-        info_text = []
-        for k, v in info_dict.items():
-            info_text.append([Paragraph(f"<b>{k}:</b>", styles['Normal']), Paragraph(str(v), styles['Normal'])])
+    def generate_thermal_ticket_pdf(sale_data, items, filename=None):
+        """Genera un PDF optimizado para impresoras térmicas de 80mm."""
+        if not filename:
+            filename = f"ticket_{sale_data['ncf']}.pdf"
             
-        t_info = Table(info_text, colWidths=[35*mm, 85*mm])
-        t_info.setStyle(TableStyle([('VALIGN', (0,0), (-1,-1), 'TOP')]))
+        # Ancho estándar 80mm (aprox 226 puntos)
+        width = 80 * mm
+        # El alto es dinámico según la cantidad de items
+        height = (120 + (len(items) * 10)) * mm
         
-        # Combinar imagen e info en tabla maestra
-        t_master = Table([[img_flowable, t_info]], colWidths=[55*mm, 125*mm])
-        t_master.setStyle(TableStyle([
-            ('VALIGN', (0,0), (-1,-1), 'TOP'),
-            ('LEFTPADDING', (1,0), (1,0), 10),
-        ]))
-        elements.append(t_master)
-        elements.append(Spacer(1, 15))
+        c = canvas.Canvas(filename, pagesize=(width, height))
         
-        # 2. Stats Section
-        elements.append(Paragraph("<b>MÉTRICAS DE RENDIMIENTO</b>", styles['Heading3']))
-        stats_data = [[k, v] for k, v in stats_dict.items()]
-        t_stats = Table(stats_data, colWidths=[80*mm, 50*mm])
-        t_stats.setStyle(TableStyle([
-            ('BACKGROUND', (0,0), (0,-1), colors.whitesmoke),
-            ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
-            ('ALIGN', (1,0), (1,-1), 'RIGHT'),
-        ]))
-        elements.append(t_stats)
-        elements.append(Spacer(1, 20))
+        curr_y = height - 10*mm
         
-        # 3. Sales History Table
-        elements.append(Paragraph("<b>HISTORIAL DETALLADO DE VENTAS</b>", styles['Heading3']))
-        headers = ["Fecha", "NCF", "Cliente", "Producto", "Cant", "Monto"]
-        table_data = [headers]
+        # --- ENCABEZADO ---
+        c.setFont("Helvetica-Bold", 12)
+        c.drawCentredString(width/2, curr_y, "SUPERMERCADO JPV V6")
+        curr_y -= 5*mm
+        c.setFont("Helvetica", 8)
+        c.drawCentredString(width/2, curr_y, "RNC: 101-00000-1")
+        curr_y -= 4*mm
+        c.drawCentredString(width/2, curr_y, "TEL: 809-555-5555")
+        curr_y -= 8*mm
         
-        for row in history:
-            # row: [FECHA, NCF, Cliente, Producto, Cant, Monto, Estado]
-            f_date = row[0].strftime('%d/%m/%Y') if hasattr(row[0], 'strftime') else str(row[0])
-            table_data.append([
-                f_date,
-                row[1],
-                str(row[2])[:25],
-                str(row[3])[:25],
-                str(row[4]),
-                f"{row[5]:,.2f}"
-            ])
+        # --- INFO VENTA ---
+        c.setFont("Helvetica-Bold", 9)
+        c.drawString(5*mm, curr_y, f"FACTURA: {sale_data['id']}")
+        curr_y -= 4*mm
+        c.drawString(5*mm, curr_y, f"NCF: {sale_data['ncf']}")
+        curr_y -= 4*mm
+        c.setFont("Helvetica", 8)
+        c.drawString(5*mm, curr_y, f"FECHA: {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}")
+        curr_y -= 4*mm
+        c.drawString(5*mm, curr_y, f"CLIENTE: {str(sale_data['client_name'])[:30]}")
+        curr_y -= 6*mm
+        
+        c.line(5*mm, curr_y, width-5*mm, curr_y)
+        curr_y -= 5*mm
+        
+        # --- TABLA ITEMS ---
+        c.setFont("Helvetica-Bold", 8)
+        c.drawString(5*mm, curr_y, "DESC")
+        c.drawRightString(width-5*mm, curr_y, "TOTAL")
+        curr_y -= 4*mm
+        
+        c.setFont("Helvetica", 8)
+        for item in items:
+            name = item['name'][:25]
+            c.drawString(5*mm, curr_y, f"{item['qty']}x {name}")
+            c.drawRightString(width-5*mm, curr_y, f"{item['total']:,.2f}")
+            curr_y -= 4*mm
             
-        t_hist = Table(table_data, colWidths=[25*mm, 35*mm, 40*mm, 40*mm, 15*mm, 30*mm], repeatRows=1)
-        t_hist.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.darkgreen),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-            ('FONTSIZE', (0, 0), (-1, -1), 8),
-        ]))
-        elements.append(t_hist)
+        curr_y -= 2*mm
+        c.line(5*mm, curr_y, width-5*mm, curr_y)
+        curr_y -= 6*mm
+        
+        # --- TOTALES ---
+        c.setFont("Helvetica-Bold", 10)
+        c.drawString(25*mm, curr_y, "TOTAL RD$:")
+        c.drawRightString(width-5*mm, curr_y, f"{sale_data['total']:,.2f}")
+        curr_y -= 8*mm
+        
+        # --- QR & FIRMA ---
+        try:
+            import qrcode
+            qr_data = f"NCF:{sale_data['ncf']}|Total:{sale_data['total']}"
+            qr = qrcode.make(qr_data)
+            qr_path = tempfile.mktemp(suffix=".png")
+            qr.save(qr_path)
+            c.drawImage(qr_path, (width/2)-15*mm, curr_y-30*mm, width=30*mm, height=30*mm)
+            curr_y -= 35*mm
+        except: pass
+        
+        c.setFont("Helvetica-Oblique", 7)
+        c.drawCentredString(width/2, curr_y, "¡Gracias por su compra!")
+        curr_y -= 10*mm
+        c.line(15*mm, curr_y, width-15*mm, curr_y)
+        c.drawCentredString(width/2, curr_y-4*mm, "FIRMA CLIENTE")
         
         try:
-            doc.build(elements)
-            os.startfile(filename)
-            return True, "Reporte de vendedor generado"
+            c.save()
+            os.startfile(filename) 
+            return True, "Ticket generado"
         except Exception as e:
             return False, str(e)

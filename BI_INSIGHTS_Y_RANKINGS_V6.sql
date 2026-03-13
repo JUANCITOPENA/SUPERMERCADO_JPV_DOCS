@@ -44,8 +44,8 @@ CROSS APPLY (
 WHERE Stats.Vendidas > 0
 ORDER BY Porcentaje_Retorno DESC;
 
--- B. Top 10 Productos Mas Rentables (CORREGIDO ERROR 8124 DEFINITIVO)
-SELECT TOP 10
+-- B. Productos Mas Rentables
+SELECT 
     P.PRODUCTO,
     Calc.Unidades AS Unidades_Vendidas,
     FORMAT(Calc.Total_Vendido - (Calc.Unidades * P.PRECIO_COMPRA), 'N2') AS Margen_Ganancia_Acumulado
@@ -140,3 +140,8 @@ INNER JOIN VENTAS V ON DV.ID_VENTA = V.ID_VENTA
 INNER JOIN PRODUCTO PR ON DV.ID_PRODUCTO = PR.ID_PRODUCTO
 WHERE V.ESTADO = 'COMPLETADA'
 GROUP BY ROLLUP(PR.PRODUCTO);
+
+
+
+select * from CLIENTE
+

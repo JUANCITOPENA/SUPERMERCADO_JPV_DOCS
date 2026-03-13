@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MiniERP Mobile POS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { -webkit-tap-highlight-color: transparent; }
+        .hidden { display: none !important; }
+        .scroll-hide::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans antialiased h-screen flex flex-col overflow-hidden">
+
+    <!-- 1. LOGIN SCREEN -->
+    <div id="login-screen" class="flex flex-col items-center justify-center h-full bg-white px-6">
+        <div class="bg-blue-600 p-4 rounded-full mb-6 shadow-xl">
+            <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+        </div>
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">MiniERP Mobile</h1>
+        <p class="text-gray-500 mb-8 text-center">Acceso a Punto de Venta Local</p>
+        
+        <input type="text" id="username" placeholder="Usuario" class="w-full p-4 mb-4 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg">
+        <input type="password" id="password" placeholder="Contraseña" class="w-full p-4 mb-6 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg">
+        
+        <button onclick="login()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl text-lg shadow-lg active:bg-blue-700 transition">INICIAR SESIÓN</button>
+        <p id="login-error" class="text-red-500 mt-4 font-bold hidden"></p>
+    </div>
+
+    <!-- 2. POS MAIN SCREEN -->
+    <div id="pos-screen" class="hidden flex flex-col h-full bg-gray-100">
+        <header class="bg-blue-600 text-white p-4 shadow-md flex justify-between items-center z-10">
+            <div>
+                <h2 class="text-xl font-bold">Punto de Venta</h2>
+                <p class="text-sm text-blue-200" id="vendor-name">Vendedor: -</p>
+            </div>
+            <button onclick="logout()" class="p-2 bg-blue-700 rounded-lg text-sm font-bold shadow-inner">SALIR</button>
+        </header>
+
+        <div class="bg-white p-3 border-b border-gray-200 z-10 shadow-sm">
+            <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Seleccione Cliente</label>
+            <select id="client-select" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg text-lg focus:outline-none">
+                <option value="">Cargando...</option>
+            </select>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-3 scroll-hide pb-36" id="product-list">
+            <div class="text-center text-gray-500 mt-10 italic">Cargando catálogo de productos...</div>
+        </div>
+
+        <div class="absolute bottom-0 w-full bg-white border-t border-gray-200 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] p-4 pb-8 z-20">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <p class="text-sm text-gray-500 font-bold uppercase tracking-wider">Artículos</p>
+                    <p id="cart-count" class="text-2xl font-black text-blue-600">0</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm text-gray-500 font-bold uppercase tracking-wider">Total a Cobrar</p>
+                    <p class="text-3xl font-black text-green-600" id="cart-total">RD$ 0.00</p>
+                </div>
+            </div>
+            <button onclick="checkout()" id="btn-checkout" class="w-full bg-blue-600 text-white font-bold py-5 rounded-2xl text-xl shadow-xl active:bg-blue-700 transition disabled:opacity-50 flex items-center justify-center">
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                PROCESAR COBRO
+            </button>
+        </div>
+    </div>
+
+    <!-- 3. SUCCESS SCREEN -->
+    <div id="success-screen" class="hidden flex flex-col items-center justify-center h-full bg-green-600 text-white px-6 text-center overflow-y-auto">
+        <div class="bg-white p-5 rounded-full mb-6 shadow-2xl animate-bounce">
+            <svg class="w-16 h-16 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+        </div>
+        <h1 class="text-4xl font-black mb-2 tracking-tight">¡VENTA EXITOSA!</h1>
+        <p class="text-xl mb-1 font-medium text-green-100" id="success-ncf"></p>
+        <p class="text-3xl mb-10 font-black" id="success-total"></p>
+        
+        <div class="w-full space-y-4 px-2">
+            <p class="text-xs font-bold text-green-200 uppercase mb-2">Descargar Comprobantes:</p>
+            
+            <button id="btn-print-tk" class="w-full bg-white text-green-700 font-bold py-4 rounded-xl text-lg shadow-lg active:bg-gray-100 flex items-center justify-center transition">
+                <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                TICKET TÉRMICO (80MM)
+            </button>
+
+            <button id="btn-print-inv" class="w-full bg-white text-blue-700 font-bold py-4 rounded-xl text-lg shadow-lg active:bg-gray-100 flex items-center justify-center transition">
+                <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                FACTURA ORIGINAL (8.5x11)
+            </button>
+
+            <button id="btn-whatsapp" class="w-full bg-green-800 text-white font-bold py-4 rounded-xl text-lg shadow-lg active:bg-green-900 flex items-center justify-center border-2 border-green-400">
+                <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.246 2.248 3.484 5.232 3.483 8.413-.003 6.557-5.338 11.892-11.893 11.892-1.997-.001-3.951-.5-5.688-1.448l-6.308 1.654zm6.59-4.819c1.414.843 3.192 1.295 5.303 1.296 5.179 0 9.397-4.218 9.399-9.396.001-2.51-.975-4.87-2.744-6.641s-4.129-2.744-6.64-2.745c-5.181 0-9.399 4.219-9.401 9.397 0 2.11.553 3.891 1.396 5.302l-.994 3.63 3.721-.975zm11.014-7.182c-.3-.149-1.774-.875-2.048-.976-.276-.1-.476-.149-.675.15-.199.299-.772.976-.946 1.175-.173.199-.347.224-.648.075-.3-.149-1.266-.467-2.411-1.485-.892-.795-1.493-1.777-1.668-2.076-.174-.299-.019-.461.13-.61.135-.133.299-.349.448-.524.149-.174.199-.299.299-.498.1-.199.05-.374-.025-.524s-.675-1.62-.924-2.219c-.242-.584-.487-.504-.675-.514-.174-.01-.374-.012-.574-.012s-.524.075-.798.374c-.274.3-.1.149-1.047 1.246-.947 1.098-3.138 3.241-3.138 7.903 0 4.661 3.39 9.151 3.863 9.774.473.623 6.669 10.184 16.158 14.279 2.257.975 4.02 1.556 5.391 1.99 2.267.713 4.33.612 5.96.368 1.818-.273 3.602-.736 4.101-1.448.499-.712.499-1.322.35-1.448-.149-.126-.549-.2-.849-.349z"/></svg>
+                ENVIAR POR WHATSAPP
+            </button>
+
+            <button onclick="resetPOS()" class="w-full bg-transparent text-white font-bold py-6 rounded-xl text-xl transition active:bg-green-700">
+                REALIZAR NUEVA VENTA
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null; let currentVendor = null; let products = []; let cart = {}; 
+        let lastTicketUrl = null; let lastInvoiceUrl = null; let lastTicketData = null;
+
+        const elLogin = document.getElementById('login-screen');
+        const elPOS = document.getElementById('pos-screen');
+        const elSuccess = document.getElementById('success-screen');
+        const API_URL = '/api';
+
+        async function login() {
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
+            const err = document.getElementById('login-error');
+            err.classList.add('hidden');
+            if(!u || !p) return;
+            try {
+                const res = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username: u, password: p})
+                });
+                const data = await res.json();
+                if(data.success) {
+                    currentUser = data.user; currentVendor = data.vendor;
+                    document.getElementById('vendor-name').innerText = `Vendedor: ${currentVendor.name}`;
+                    elLogin.classList.add('hidden'); elPOS.classList.remove('hidden');
+                    loadClients(); loadProducts();
+                } else { err.innerText = data.msg; err.classList.remove('hidden'); }
+            } catch(e) { err.innerText = "Error de conexión."; err.classList.remove('hidden'); }
+        }
+
+        function logout() { location.reload(); }
+
+        async function loadClients() {
+            const res = await fetch(`${API_URL}/clients`);
+            const cls = await res.json();
+            const sel = document.getElementById('client-select');
+            sel.innerHTML = '';
+            cls.forEach(c => { sel.innerHTML += `<option value="${c.id}">${c.name}</option>`; });
+        }
+
+        async function loadProducts() {
+            const res = await fetch(`${API_URL}/products`);
+            products = await res.json();
+            renderProducts();
+        }
+
+        function renderProducts() {
+            const list = document.getElementById('product-list'); list.innerHTML = '';
+            products.forEach(p => {
+                const qty = cart[p.id] || 0;
+                const imgTag = p.image ? `<img src="${p.image}" class="w-16 h-16 object-cover rounded-xl mr-3 shadow-sm border border-gray-100">` : `<div class="w-16 h-16 bg-gray-100 rounded-xl mr-3 flex items-center justify-center text-2xl shadow-sm border border-gray-100">📦</div>`;
+                list.innerHTML += `
+                    <div class="bg-white p-3 rounded-2xl shadow-sm mb-3 flex items-center border border-gray-100 active:bg-gray-50 transition">
+                        ${imgTag}
+                        <div class="flex-1 min-w-0 pr-2">
+                            <h3 class="font-bold text-gray-800 text-base leading-tight truncate">${p.name}</h3>
+                            <p class="text-blue-600 font-black text-lg">RD$ ${p.price.toFixed(2)}</p>
+                            <p class="text-[10px] text-gray-400 uppercase font-bold">Disp: ${p.stock}</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="updateQty(${p.id}, -1)" class="w-10 h-10 rounded-full bg-gray-100 text-gray-600 font-bold text-lg active:bg-gray-200 flex items-center justify-center">-</button>
+                            <span class="font-bold text-lg w-5 text-center">${qty}</span>
+                            <button onclick="updateQty(${p.id}, 1)" class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 font-bold text-lg active:bg-blue-200 flex items-center justify-center">+</button>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function updateQty(id, change) {
+            const p = products.find(x => x.id === id);
+            let current = cart[id] || 0; let next = current + change;
+            if (next < 0) next = 0;
+            if (next > p.stock) { alert('Stock insuficiente'); return; }
+            cart[id] = next;
+            if (next === 0) delete cart[id];
+            renderProducts(); updateCartUI();
+        }
+
+        function updateCartUI() {
+            let count = 0; let total = 0;
+            Object.keys(cart).forEach(id => {
+                const p = products.find(x => x.id == id);
+                const q = cart[id]; count += q; total += (p.price * q) * 1.18; 
+            });
+            document.getElementById('cart-count').innerText = count;
+            document.getElementById('cart-total').innerText = `RD$ ${total.toFixed(2)}`;
+            document.getElementById('btn-checkout').disabled = count === 0;
+        }
+
+        async function checkout() {
+            if(Object.keys(cart).length === 0) return;
+            const btn = document.getElementById('btn-checkout');
+            btn.disabled = true; btn.innerText = "PROCESANDO VENTA...";
+            const items = Object.keys(cart).map(id => {
+                const p = products.find(x => x.id == id);
+                return { id: parseInt(id), qty: cart[id], price: p.price, name: p.name, itbis_unit: p.price * 0.18 };
+            });
+            const payload = { client_id: parseInt(document.getElementById('client-select').value), vendor_id: currentVendor.id, items: items };
+            try {
+                const res = await fetch(`${API_URL}/checkout`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if(data.success) {
+                    lastTicketUrl = data.ticket_url; lastInvoiceUrl = data.invoice_url;
+                    lastTicketData = data; lastTicketData.total_display = document.getElementById('cart-total').innerText;
+                    elPOS.classList.add('hidden'); elSuccess.classList.remove('hidden');
+                    document.getElementById('success-ncf').innerText = `NCF: ${data.ncf}`;
+                    document.getElementById('success-total').innerText = lastTicketData.total_display;
+                    
+                    // Botones de descarga directa
+                    document.getElementById('btn-print-tk').onclick = () => window.location.href = lastTicketUrl;
+                    document.getElementById('btn-print-inv').onclick = () => window.location.href = lastInvoiceUrl;
+                    document.getElementById('btn-whatsapp').onclick = sendWhatsApp;
+                } else { alert('Error: ' + data.msg); }
+            } catch(e) { alert('Error procesando la venta.'); } finally {
+                btn.disabled = false; btn.innerText = "PROCESAR COBRO";
+            }
+        }
+
+        function sendWhatsApp() {
+            const msg = `*SUPERMERCADO JPV V6*\n¡Gracias por su compra!\n\n*Factura:* ${lastTicketData.id}\n*NCF:* ${lastTicketData.ncf}\n*Total:* ${lastTicketData.total_display}\n\nPuede descargar su factura aquí: ${window.location.origin}${lastInvoiceUrl}`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        function resetPOS() {
+            cart = {}; updateCartUI(); loadProducts();
+            elSuccess.classList.add('hidden'); elPOS.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
