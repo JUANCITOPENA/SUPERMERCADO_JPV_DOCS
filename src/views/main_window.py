@@ -10,7 +10,7 @@ from src.views.sales_history import SalesHistoryView
 from src.views.users import UsersView
 from src.views.aux_masters import AuxMastersView
 from src.views.dashboard import DashboardView
-from src.views.credit_notes_ui import CreditNoteWindow
+from src.views.credit_notes_ui import CreditNotesView
 
 class MainWindow(ctk.CTk):
     def __init__(self, user_data):
@@ -99,8 +99,8 @@ class MainWindow(ctk.CTk):
         SalesHistoryView(self.content_frame, self.user_data).pack(fill="both", expand=True)
 
     def show_credit_notes(self):
-        # Abre como ventana modal en lugar de panel incrustado para mayor control
-        CreditNoteWindow(self, self.user_data)
+        self.clear_content()
+        CreditNotesView(self.content_frame, self.user_data).pack(fill="both", expand=True)
 
     def show_clients(self):
         self.clear_content()

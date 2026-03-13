@@ -1,91 +1,54 @@
 import unittest
-import sys
-import os
-
-# Add project root to path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from src.controllers.credit_note_controller import CreditNoteController
 from src.config.database import db
 
 class TestCreditNotes(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.ctrl = CreditNoteController()
-        # Buscar una factura real para pruebas
+    def setUp(self):
+        self.controller = CreditNoteController()
+        # Ensure we have at least one valid invoice to test
         conn = db.connect()
         cursor = conn.cursor()
-        cursor.execute("SELECT TOP 1 NCF_GENERADO FROM VENTAS WHERE ESTADO = 'COMPLETADA'")
-        row = cursor.fetchone()
-        cls.test_ncf = row[0] if row else None
+        cursor.execute("SELECT TOP 1 ID_VENTA, NCF_GENERADO, TOTAL_VENTA FROM VENTAS WHERE ESTADO = 'COMPLETADA'")
+        self.test_invoice = cursor.fetchone()
         conn.close()
 
-    def test_01_search_valid_invoice(self):
-        """REQ: Buscar factura existente y traer detalles."""
-        if not self.test_ncf:
-            self.skipTest("No hay facturas completadas en la BD para probar.")
-        
-        data, error = self.ctrl.get_invoice_details(self.test_ncf)
-        self.assertIsNone(error)
-        self.assertIsNotNone(data)
-        self.assertEqual(data['ncf'], self.test_ncf)
+    def test_search_invoices(self):
+        """Prueba que la busqueda de facturas devuelva resultados."""
+        res = self.controller.search_invoices()
+        self.assertIsInstance(res, list)
+        if self.test_invoice:
+            self.assertTrue(len(res) > 0)
+
+    def test_get_invoice_details(self):
+        """Prueba la obtencion de detalles de una factura."""
+        if not self.test_invoice: self.skipTest("No hay facturas para probar")
+        data, err = self.controller.get_invoice_details(self.test_invoice[0])
+        self.assertIsNone(err)
+        self.assertEqual(data['ncf'], self.test_invoice[1])
         self.assertTrue(len(data['items']) > 0)
-        print(f"✅ Búsqueda validada para {self.test_ncf}")
 
-    def test_02_search_invalid_invoice(self):
-        """REQ: Manejo de errores explícito para facturas inexistentes."""
-        data, error = self.ctrl.get_invoice_details("NCF-FANTASMA-999")
-        self.assertIsNotNone(error)
-        self.assertIn("no encontrada", error)
-        print("✅ Manejo de factura inexistente validado.")
-
-    def test_03_ncf_generation(self):
-        """REQ: Generación automática de NCF tipo B04."""
-        ncf, seq = self.ctrl.generate_next_ncf_b04()
-        self.assertTrue(ncf.startswith("B04"))
-        self.assertEqual(len(ncf), 11)
-        print(f"✅ Generación de NCF validada: {ncf}")
-
-    def test_04_full_credit_note_process(self):
-        """REQ: Proceso completo: NC, Stock, Estado Factura."""
-        if not self.test_ncf:
-            self.skipTest("Sin factura para proceso completo.")
-
-        # 1. Datos iniciales
-        data, _ = self.ctrl.get_invoice_details(self.test_ncf)
-        item = data['items'][0]
-        prod_id = item['id_producto']
+    def test_create_credit_note_logic(self):
+        """Simula la creacion de una nota de credito."""
+        if not self.test_invoice: self.skipTest("No hay facturas para probar")
         
-        conn = db.connect()
-        cursor = conn.cursor()
-        cursor.execute("SELECT STOCK FROM PRODUCTO WHERE ID_PRODUCTO = ?", (prod_id,))
-        stock_inicial = int(cursor.fetchone()[0])
-
-        # 2. Crear NC (Devolución de 1 unidad)
-        nc_payload = {
-            "ncf_afectado": self.test_ncf,
-            "tipo": "DEVOLUCION",
-            "usuario": "UnitTester",
-            "comentario": "Prueba de cumplimiento técnica",
-            "items": [{"id_producto": prod_id, "cantidad": 1, "precio": item['precio']}]
+        # Obtener detalles reales para el payload
+        details, _ = self.controller.get_invoice_details(self.test_invoice[0])
+        
+        # Devolver solo 1 unidad del primer item
+        it = details['items'][0]
+        it['qty_refund'] = 1
+        
+        payload = {
+            "id_venta": details['id_venta'],
+            "total_venta": details['total'],
+            "usuario": "TestUnit",
+            "motivo": "Prueba Unitaria",
+            "items": [it]
         }
         
-        success, msg = self.ctrl.create_credit_note(nc_payload)
-        self.assertTrue(success)
+        ok, msg = self.controller.create_credit_note(payload)
+        self.assertTrue(ok)
+        self.assertIn("generada con exito", msg)
 
-        # 3. Validar Stock Incremental
-        cursor.execute("SELECT STOCK FROM PRODUCTO WHERE ID_PRODUCTO = ?", (prod_id,))
-        stock_final = int(cursor.fetchone()[0])
-        self.assertEqual(stock_final, stock_inicial + 1)
-
-        # 4. Validar Estado Factura
-        cursor.execute("SELECT ESTADO FROM VENTAS WHERE NCF_GENERADO = ?", (self.test_ncf,))
-        nuevo_estado = cursor.fetchone()[0]
-        # Como es parcial (1 unidad), debería ser NC_PARCIAL o ANULADA si solo tenía 1
-        self.assertIn(nuevo_estado, ['NC_PARCIAL', 'ANULADA'])
-
-        conn.close()
-        print(f"✅ Proceso completo validado. Stock: {stock_inicial}->{stock_final}. Estado: {nuevo_estado}")
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

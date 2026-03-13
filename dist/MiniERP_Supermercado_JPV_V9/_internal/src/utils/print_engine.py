@@ -492,3 +492,95 @@ class PrintEngine:
             return True, "Reporte generado correctamente"
         except Exception as e:
             return False, str(e)
+
+    @staticmethod
+    def generate_credit_note(nc_data, items, filename=None):
+        """Genera un PDF profesional para la Nota de Crédito (E34)."""
+        if not filename:
+            filename = f"nota_credito_{nc_data['ncf']}.pdf"
+            
+        c = canvas.Canvas(filename, pagesize=letter)
+        w, h = letter
+        
+        # --- ENCABEZADO ---
+        c.setFillColor(colors.darkred)
+        c.rect(0, h - 35*mm, w, 35*mm, fill=1, stroke=0)
+        
+        c.setFillColor(colors.white)
+        c.setFont("Helvetica-Bold", 20)
+        c.drawString(20*mm, h - 15*mm, "SUPERMERCADO JPV V6")
+        c.setFont("Helvetica", 12)
+        c.drawString(20*mm, h - 22*mm, "NOTA DE CRÉDITO ELECTRÓNICA")
+        c.setFont("Helvetica", 10)
+        c.drawString(20*mm, h - 28*mm, "RNC: 101-00000-1 | Tel: 809-555-5555")
+
+        # --- CAJA DE INFORMACIÓN ---
+        c.setFillColor(colors.black)
+        c.setStrokeColor(colors.grey)
+        c.roundRect(15*mm, h - 75*mm, 185*mm, 35*mm, 4, stroke=1, fill=0)
+        
+        c.setFont("Helvetica-Bold", 10)
+        c.drawString(20*mm, h - 45*mm, "NCF NOTA CRÉDITO:")
+        c.drawString(20*mm, h - 52*mm, "FECHA EMISIÓN:")
+        c.drawString(20*mm, h - 59*mm, "FACTURA AFECTADA:")
+        c.drawString(20*mm, h - 66*mm, "MOTIVO:")
+        
+        c.setFont("Helvetica", 10)
+        c.drawString(65*mm, h - 45*mm, str(nc_data['ncf']))
+        fecha_str = nc_data['fecha'].strftime('%d/%m/%Y %H:%M') if hasattr(nc_data['fecha'], 'strftime') else str(nc_data['fecha'])
+        c.drawString(65*mm, h - 52*mm, fecha_str)
+        c.drawString(65*mm, h - 59*mm, str(nc_data['ncf_ref']))
+        c.drawString(65*mm, h - 66*mm, str(nc_data['motivo']))
+
+        c.setFont("Helvetica-Bold", 10)
+        c.drawString(120*mm, h - 45*mm, "CLIENTE:")
+        c.drawString(120*mm, h - 52*mm, "RNC/CÉDULA:")
+        
+        c.setFont("Helvetica", 10)
+        c.drawString(145*mm, h - 45*mm, str(nc_data['cliente'])[:30])
+        c.drawString(145*mm, h - 52*mm, str(nc_data.get('rnc', 'N/A')))
+
+        # --- TABLA DE ARTÍCULOS ---
+        y = h - 85*mm
+        c.setFillColor(colors.lightgrey)
+        c.rect(15*mm, y, 185*mm, 8*mm, fill=1, stroke=0)
+        c.setFillColor(colors.black)
+        c.setFont("Helvetica-Bold", 9)
+        
+        c.drawString(20*mm, y+2*mm, "CANT")
+        c.drawString(40*mm, y+2*mm, "DESCRIPCIÓN DEL PRODUCTO")
+        c.drawString(130*mm, y+2*mm, "PRECIO REF")
+        c.drawString(160*mm, y+2*mm, "TOTAL DEV")
+        
+        y -= 6*mm
+        c.setFont("Helvetica", 9)
+        
+        for item in items:
+            c.drawString(20*mm, y, str(item['qty']))
+            c.drawString(40*mm, y, item['name'][:50])
+            c.drawString(130*mm, y, f"{item['price']:,.2f}")
+            c.drawString(160*mm, y, f"{item['total']:,.2f}")
+            
+            c.setStrokeColor(colors.lightgrey)
+            c.line(15*mm, y-2*mm, 200*mm, y-2*mm) 
+            
+            y -= 6*mm
+            if y < 30*mm: 
+                c.showPage()
+                y = h - 20*mm
+
+        # --- TOTALES ---
+        y -= 10*mm
+        c.setFont("Helvetica-Bold", 11)
+        c.drawString(120*mm, y, "TOTAL DEVUELTO:")
+        c.drawRightString(190*mm, y, f"RD$ {nc_data['total']:,.2f}")
+        
+        c.setFont("Helvetica-Oblique", 8)
+        c.drawCentredString(w/2, 15*mm, "ESTE DOCUMENTO ES UNA NOTA DE CRÉDITO ELECTRÓNICA (NCF SERIE E)")
+        
+        try:
+            c.save()
+            os.startfile(filename) 
+            return True, "Nota de Credito impresa"
+        except Exception as e:
+            return False, str(e)

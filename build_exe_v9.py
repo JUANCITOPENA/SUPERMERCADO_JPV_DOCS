@@ -20,22 +20,18 @@ def main():
     # 2. Instalar dependencias necesarias para el build
     print("Instalando dependencias de build...")
     run_command("python -m pip install --upgrade pip")
-    run_command("python -m pip install pyinstaller customtkinter Pillow pyodbc reportlab xlsxwriter matplotlib requests packaging")
+    run_command("python -m pip install pyinstaller customtkinter Pillow pyodbc reportlab xlsxwriter matplotlib requests packaging tkcalendar")
 
     # 3. Limpiar compilaciones anteriores
     print("Limpiando carpetas temporales...")
     for folder in ['build', 'dist']:
         if os.path.exists(folder):
-            shutil.rmtree(folder)
+            try:
+                shutil.rmtree(folder)
+            except:
+                print(f"No se pudo borrar {folder}, asegurese de cerrar el programa.")
 
     # 4. Comando de PyInstaller
-    # --noconsole: Oculta la terminal (aplicación GUI)
-    # --onedir: Crea una carpeta con el ejecutable y dependencias (más estable)
-    # --add-data: Incluye carpetas de recursos
-    # --collect-all: Recolecta recursos de librerías específicas (necesario para customtkinter)
-    
-    # Sintaxis de --add-data en Windows: "origen;destino"
-    # Sintaxis de --add-data en Linux/Mac: "origen:destino"
     separator = ";" if sys.platform == "win32" else ":"
 
     pyinstaller_cmd = [
@@ -48,6 +44,7 @@ def main():
         f"--add-data=docs{separator}docs",
         f"--add-data=config.json{separator}.",
         "--collect-all=customtkinter",
+        "--collect-all=tkcalendar",
         "--hidden-import=PIL._tkinter_finder",
         ENTRY_POINT
     ]

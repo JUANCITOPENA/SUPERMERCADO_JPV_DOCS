@@ -1,51 +1,81 @@
-import sys
-import os
+USE SUPERMERCADO_JPV_V6;
+GO
 
-# Add project root to path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+-- 1. Asegurar tabla de Secuencias si no existe
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'SECUENCIAS_NCF')
+BEGIN
+    CREATE TABLE SECUENCIAS_NCF (
+        Tipo VARCHAR(10) PRIMARY KEY,
+        Ultimo_Numero INT NOT NULL
+    );
+    INSERT INTO SECUENCIAS_NCF (Tipo, Ultimo_Numero) VALUES ('E34', 0);
+END
+GO
 
-from src.config.database import db
+-- 2. SP para busqueda avanzada de FACTURAS para aplicarles Notas de Credito
+CREATE OR ALTER PROCEDURE SP_BUSCAR_FACTURAS_PARA_NC
+    @Criterio VARCHAR(100) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT TOP 50
+        V.ID_VENTA,
+        V.NCF_GENERADO,
+        CONCAT(C.NOMBRE_CLIENTE, ' ', C.APELLIDO_CLIENTE) AS Cliente,
+        V.TOTAL_VENTA,
+        V.FECHA,
+        V.ESTADO
+    FROM VENTAS V
+    INNER JOIN CLIENTE C ON V.ID_CLIENTE = C.ID_CLIENTE
+    WHERE (V.ESTADO = 'COMPLETADA' OR V.ESTADO = 'NC_PARCIAL')
+      AND (@Criterio IS NULL OR V.NCF_GENERADO LIKE '%' + @Criterio + '%' OR C.NOMBRE_CLIENTE LIKE '%' + @Criterio + '%')
+    ORDER BY V.FECHA DESC;
+END
+GO
 
-def apply_sp_patch():
-    print("--- Creando Procedimientos Almacenados para Notas de Crédito ---")
-    
-    conn = db.connect()
-    try:
-        cursor = conn.cursor()
+-- 3. SP para crear la Nota de Credito de forma segura
+CREATE OR ALTER PROCEDURE SP_CREAR_NOTA_CREDITO_PRO
+    @ID_Venta INT,
+    @Usuario VARCHAR(50),
+    @Motivo VARCHAR(200),
+    @Tipo VARCHAR(20), -- 'TOTAL' o 'PARCIAL'
+    @MontoTotal DECIMAL(12,2),
+    @ItbisTotal DECIMAL(12,2)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        BEGIN TRANSACTION;
 
-        # 1. SP para obtener detalle de factura para NC
-        sp_get_invoice = """
-        CREATE OR ALTER PROCEDURE GetNotaCreditoDetalle
-            @NCF VARCHAR(20)
-        AS
-        BEGIN
-            -- Encabezado
-            SELECT ID_VENTA, NCF_GENERADO, TOTAL_VENTA, FECHA, ESTADO 
-            FROM VENTAS 
-            WHERE NCF_GENERADO = @NCF;
+        -- Generar NCF E34
+        DECLARE @NextNum INT;
+        UPDATE SECUENCIAS_NCF SET @NextNum = Ultimo_Numero = Ultimo_Numero + 1 WHERE Tipo = 'E34';
+        DECLARE @NCF_NC VARCHAR(19) = 'E34' + RIGHT('0000000000' + CAST(@NextNum AS VARCHAR), 10);
 
-            -- Detalles
-            SELECT d.ID_PRODUCTO, p.PRODUCTO, d.CANTIDAD, d.PRECIO_UNITARIO, d.SUBTOTAL 
-            FROM DETALLE_VENTAS d
-            JOIN PRODUCTO p ON d.ID_PRODUCTO = p.ID_PRODUCTO
-            WHERE d.ID_VENTA = (SELECT ID_VENTA FROM VENTAS WHERE NCF_GENERADO = @NCF);
-        END
-        """
-        cursor.execute(sp_get_invoice)
-        print("✅ SP GetNotaCreditoDetalle creado/actualizado.")
+        DECLARE @NCF_Orig VARCHAR(19);
+        SELECT @NCF_Orig = NCF_GENERADO FROM VENTAS WHERE ID_VENTA = @ID_Venta;
 
-        # 2. SP para crear la Nota de Crédito (Lógica Transaccional)
-        # Nota: Usaremos lógica en el controlador para mayor flexibilidad con los items, 
-        # pero el SP GetNotaCreditoDetalle ya resuelve la búsqueda fallida.
-        
-        conn.commit()
-        print("--- Parche de Base de Datos Aplicado ---")
+        -- Insertar Cabecera
+        INSERT INTO NOTA_CREDITO (ID_VENTA, NCF_NOTA_CREDITO, NCF_FACTURA_ORIGINAL, FECHA, MOTIVO, TIPO_DEVOLUCION, TOTAL_DEVUELTO, ITBIS_DEVUELTO)
+        VALUES (@ID_Venta, @NCF_NC, @NCF_Orig, GETDATE(), @Motivo, @Tipo, @MontoTotal, @ItbisTotal);
 
-    except Exception as e:
-        print(f"❌ Error: {e}")
-        conn.rollback()
-    finally:
-        conn.close()
+        DECLARE @ID_Nota INT = SCOPE_IDENTITY();
 
-if __name__ == "__main__":
-    apply_sp_patch()
+        -- Actualizar Estado de la Venta
+        DECLARE @TotalVentaOrig DECIMAL(12,2);
+        SELECT @TotalVentaOrig = TOTAL_VENTA FROM VENTAS WHERE ID_VENTA = @ID_Venta;
+
+        IF @Tipo = 'TOTAL' OR @MontoTotal >= @TotalVentaOrig
+            UPDATE VENTAS SET ESTADO = 'ANULADA' WHERE ID_VENTA = @ID_Venta;
+        ELSE
+            UPDATE VENTAS SET ESTADO = 'NC_PARCIAL' WHERE ID_VENTA = @ID_Venta;
+
+        COMMIT TRANSACTION;
+        SELECT @ID_Nota AS ID_GENERADO, @NCF_NC AS NCF_GENERADO;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END
+GO
